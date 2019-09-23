@@ -39,10 +39,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID); // this method changes map to hybrid satellite view
         // Add a marker in Sydney and move the camera //CHANGED TO CSUDH
-        LatLng csudh = new LatLng(33.8647829, -118.2552142);
+        LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
         //LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(csudh));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
+        // used newLatLngZoom method to specify to zoom (level 16) into 'CSUDH' marker by default
+        //mMap.moveCamera(CameraUpdateFactory.zoomBy(4, csudh));
     }
 }

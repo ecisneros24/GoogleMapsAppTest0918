@@ -3,7 +3,8 @@ package com.example.googlemapstest0918;
 import android.content.Context;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+//import androidx.test.ext.junit.runners.AndroidJUnit4; This line was giving compile error; may have added by accident
+import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
