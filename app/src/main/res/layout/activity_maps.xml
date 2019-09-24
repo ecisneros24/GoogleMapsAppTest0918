@@ -18,7 +18,7 @@
     <SearchView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
+        android:id="@+id/search_bar"
         android:queryHint="Where to next, Toro?"
         android:iconifiedByDefault="false"
         android:layout_margin="10dp"
