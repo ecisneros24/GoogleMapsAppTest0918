@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.example.googlemapstest0918"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -22,8 +22,20 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.google.android.gms:play-services-maps:16.1.0'
+
+    //required for Google Play Services for Maps
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
+    //required for Google Play Services for location
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
+
+
+    implementation 'com.google.android.libraries.places:places-compat:2.0.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    //required for Google Maps directions
+    implementation 'com.google.maps:google-maps-services:0.2.9'
+    implementation 'org.slf4j:slf4j-simple:1.7.25'
 }
+
