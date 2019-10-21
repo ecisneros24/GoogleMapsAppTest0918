@@ -160,7 +160,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         directions.destination(destination).setCallback(new PendingResult.Callback<DirectionsResult>() {
             @Override
             public void onResult(DirectionsResult result) { //this is returning a navigation result from our default marker to a destination (made from user input in SearchBar)
-                                                                // SEE LOGCAT in Android Studio to see direction results, need to display Polyline still
+                                                                // SEE LOGCAT in Android Studio to see direction results, need to display Polyline still on map (line from starting point to destination)
                 Log.d(TAG, "calculateDirections: routes: " + result.routes[0].toString());
                 Log.d(TAG, "calculateDirections: duration: " + result.routes[0].legs[0].duration);
                 Log.d(TAG, "calculateDirections: distance: " + result.routes[0].legs[0].distance);
