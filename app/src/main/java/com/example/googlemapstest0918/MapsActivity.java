@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.content.pm.PackageManager;
 import android.graphics.Camera;
+import android.graphics.Color;
 import android.location.Geocoder; // Geocoder is for transforming address --> GPS coordinates (could be used for planting markers on maps for navigation)
 import android.location.Address;
 import android.location.Location;
@@ -39,7 +40,10 @@ import com.google.android.libraries.places.compat.Places;
 import com.google.maps.DirectionsApiRequest;
 import com.google.maps.GeoApiContext;
 import com.google.maps.PendingResult;
+import com.google.maps.internal.PolylineEncoding;
 import com.google.maps.model.DirectionsResult;
+import com.google.maps.model.DirectionsRoute;
+import com.google.maps.model.TravelMode;
 
 
 import java.io.IOException;
@@ -75,7 +79,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         // ***CITATION*** method below is derived from the following YouTube Tutorial: (Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
-        if(mGeoApiContext == null){
+        if (mGeoApiContext == null) {
             mGeoApiContext = new GeoApiContext.Builder().apiKey(getString(R.string.google_maps_key)).build();
         }
 
@@ -97,7 +101,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
 
-
         searchView = findViewById(R.id.search_bar); // searchview object is being by our "search_bar search view we created in our activity_maps.xml file
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -106,12 +109,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String location = searchView.getQuery().toString(); //this grabs user-entered text from SearchView search box; saves as string
                 List<Address> addressList = null;
 
-                if(location != null || !location.equals("")){ //makes sure there is no invalid user entry
+                if (location != null || !location.equals("")) { //makes sure there is no invalid user entry
                     Geocoder geocoder = new Geocoder(MapsActivity.this);
-                    try{
+
+                    try {
                         addressList = geocoder.getFromLocationName(location, 1); // Google Geocoder converts user-entered text to GPS coordinates (we will use to place marker on map and (later) enable our own navigation
                         //Google Geocoder documentation here: https://developer.android.com/reference/android/location/Geocoder
-                    } catch(IOException e){
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                     Address address = addressList.get(0);
@@ -126,6 +130,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 return false;
             }
+
             //********CITATION*** The code relating to searchView above was derived from the following YouTube video: https://www.youtube.com/watch?v=iWYsBDCGhGw
             @Override
             public boolean onQueryTextChange(String s) {
@@ -138,9 +143,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
     // ***CITATION*** the 'Calculate' method below is derived from the following YouTube Tutorial: (Calculating Directions with Google Directions API, Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
-    private void calculateDirections(Marker marker){
+    private void calculateDirections(Marker marker) { // method accepts a marker object and sends origin + destination directions request to Google. Response can include distance, routes, polyline data, etc.
         Log.d(TAG, "calculateDirections: calculating directions.");
 
         com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng(
@@ -148,9 +152,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 marker.getPosition().longitude
         );
         DirectionsApiRequest directions = new DirectionsApiRequest(mGeoApiContext);
-
-        directions.alternatives(true);
-        directions.origin(
+        directions.mode(TravelMode.WALKING); //this method explicitly sets the DirectionsApi request object to return ONLY walking directions data, not driving directions from the API. We won't need driving directions as this app is primarily for on-campus use
+        directions.alternatives(false); // this method shows us all possible routes from point a to point b. To show only one route result, set to FALSE
+        directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
                 new com.google.maps.model.LatLng(
                         defaultUserLocation.latitude,
                         defaultUserLocation.longitude
@@ -160,31 +164,68 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         directions.destination(destination).setCallback(new PendingResult.Callback<DirectionsResult>() {
             @Override
             public void onResult(DirectionsResult result) { //this is returning a navigation result from our default marker to a destination (made from user input in SearchBar)
-                                                                // SEE LOGCAT in Android Studio to see direction results, need to display Polyline still on map (line from starting point to destination)
+                // SEE LOGCAT in Android Studio to see direction results, need to display Polyline still on map (line from starting point to destination)
                 Log.d(TAG, "calculateDirections: routes: " + result.routes[0].toString());
                 Log.d(TAG, "calculateDirections: duration: " + result.routes[0].legs[0].duration);
                 Log.d(TAG, "calculateDirections: distance: " + result.routes[0].legs[0].distance);
                 Log.d(TAG, "calculateDirections: geocodedWayPoints: " + result.geocodedWaypoints[0].toString());
                 Log.d(TAG, "calculateDirections: overviewPolyline: " + result.routes[0].overviewPolyline.toString());
 
+
+                // addPolylinesToMap is called here because the result from Directionsresult object is returned in this onResult method
+
+                addPolylinesToMap(result);
             }
 
             @Override
             public void onFailure(Throwable e) {
-                Log.e(TAG, "calculateDirections: Failed to get directions: " + e.getMessage() );
+                Log.e(TAG, "calculateDirections: Failed to get directions: " + e.getMessage());
 
             }
         });
     }
 
+    // ***CITATION*** the 'AddPolyLinesToMap' method below is derived from the following YouTube Tutorial: (Calculating Directions with Google Directions API, Coding with Mitch). link = https://www.youtube.com/watch?v=xl0GwkLNpNI&list=PLgCYzUzKIBE-SZUrVOsbYMzH7tPigT3gi&index=20
+    private void addPolylinesToMap(final DirectionsResult result) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "run: result routes: " + result.routes.length);
 
-    public String concatDirectionsURL(){ //this method creates the URL request with the following required attributes: origin, destination, traveling mode (walking or driving) and API key.
-                                        //This URL is sent to Google Maps Directions API. The API then returns a set of waypoints, which we use to construct a 'polyline' on map between origin and destination
+                //add comment on import statement;  DirectionsRoute
+                for (DirectionsRoute route : result.routes) {  //this is taking all of the 'checkpoints' from the results object (returned from the request to DirectionsResult object) and
+                    Log.d(TAG, "run: leg: " + route.legs[0].toString());
+                    List<com.google.maps.model.LatLng> decodedPath = PolylineEncoding.decode(route.overviewPolyline.getEncodedPath()); //this sums up all of the checkpoints along a route
+                    //add comment on import statement; PolylineEncoding above
+
+                    List<LatLng> newDecodedPath = new ArrayList<>(); //list will contain latitude + longitude coordinates for each 'checkpoint' along the route (ex, a point where the route/Polyline makes a turn, starts, or stops'
+
+
+                    for (com.google.maps.model.LatLng latLng : decodedPath) { // This loops through all the LatLng coordinates of a polyline...
+
+//                        Log.d(TAG, "run: latlng: " + latLng.toString());
+                        newDecodedPath.add(new LatLng( //... and adds the coordinates for each 'checkpoint' on the route to this arrayl ist
+                                latLng.lat,
+                                latLng.lng
+                        ));
+                    }
+                    Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath)); //this actually adds the polyline (created from the sum of all the 'checkpoints' of all routes; obtained from a request to DirectionsResult object)
+                    polyline.setColor(Color.rgb(239,186,8)); // set Polyline to CSUDH yellow color to contrast the burgundy status bar... trying to have a theme going on here! Source for school theme values is on CSUDH website
+                    polyline.setClickable(true);
+
+                }
+            }
+        });
+    }
+
+
+    public String concatDirectionsURL() { //this method creates the URL request with the following required attributes: origin, destination, traveling mode (walking or driving) and API key.
+        //This URL is sent to Google Maps Directions API. The API then returns a set of waypoints, which we use to construct a 'polyline' on map between origin and destination
 
         String StudentOrigin = "Loker Student Union";
         String StudentDestination = "CSUDH Passport Hub";
-        String APIkey = "AIzaSyC1KXH1tpPgdIK8Ln9PR8Ok8fdPOPNilLE"; //this API key is specific for Google MAPS Directions API. I use a separate key for Google Maps API
-      // Google Directions API accepts a URL format like the following: "https://maps.googleapis.com/maps/api/directions/json?origin=Toronto&destination=Montreal&key=YOUR_API_KEY";
+        String APIkey = "AIzaSyC1KXH1tpPgdIK8Ln9PR8Ok8fdPOPNilLE"; //this API key is specific for Google MAPS Directions API. I generated a separate key for Google Maps API
+        // Google Directions API accepts a URL format like the following: "https://maps.googleapis.com/maps/api/directions/json?origin=Toronto&destination=Montreal&key=YOUR_API_KEY";
         String URL2 = "https://maps.googleapis.com/maps/api/directions/json?origin=" + StudentOrigin + "&destination=" + StudentDestination + "&mode=walking&key=" + APIkey;
         System.out.println(URL2);
         return URL2;
@@ -192,23 +233,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     //***CITATION*** This method below is derived from Google Maps Location documentation at this website: https://developers.google.com/maps/documentation/android-sdk/current-place-tutorial
-	//Used to ask location permission from user, before showing current location on map
-	private void getLocationPermission() {
-		/*
-		 * Request location permission, so that we can get the location of the
-		 * device. The result of the permission request is handled by a callback,
-		 * onRequestPermissionsResult.
-		 */
-		if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-				android.Manifest.permission.ACCESS_FINE_LOCATION)
-				== PackageManager.PERMISSION_GRANTED) {
-			mLocationPermissionGranted = true;
-		} else {
-			ActivityCompat.requestPermissions(this,
-					new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-					PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-		}
-	}
+    //Used to ask location permission from user, before showing current location on map
+    private void getLocationPermission() {
+        /*
+         * Request location permission, so that we can get the location of the
+         * device. The result of the permission request is handled by a callback,
+         * onRequestPermissionsResult.
+         */
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mLocationPermissionGranted = true;
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -241,7 +282,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mLastKnownLocation = null;
                 getLocationPermission();
             }
-        } catch (SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
     }
@@ -261,7 +302,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID); // this method changes map to hybrid satellite view (satellite + 2D map + labels hybrid)
-       // Add a marker in Sydney and move the camera //CHANGED TO CSUDH
+        // Add a marker in Sydney and move the camera //CHANGED TO CSUDH
         LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
         //LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH"));
@@ -269,12 +310,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // used newLatLngZoom method to specify to zoom (level 16) into 'CSUDH' marker by default
         //mMap.moveCamera(CameraUpdateFactory.zoomBy(4, csudh));
 
-		getLocationPermission();
+        getLocationPermission();
 
 
         // Add polylines and polygons to the map. This section shows just
         // a single polyline. Read the rest of the tutorial to learn more.
-        Polyline polyline1 = googleMap.addPolyline(new PolylineOptions()
+        Polyline polyline1 = googleMap.addPolyline(new PolylineOptions() //remove this..testing
                 .clickable(true)
                 .add(
                         new LatLng(-35.016, 143.321),
@@ -284,8 +325,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         new LatLng(-32.306, 149.248),
                         new LatLng(-32.491, 147.309)));
     }
-
-
 
 
     //***CITATION*** the following method was derived from the following Github page: https://github.com/googlemaps/android-samples/blob/master/tutorials/CurrentPlaceDetailsOnMap/app/src/main/java/com/example/currentplacedetailsonmap/MapsActivityCurrentPlace.java
@@ -312,7 +351,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             //Place call to CalculateDirections(Marker) here //remove this and possibly lines above this
 
 
-
                             // place marker here with label "U R HERE!"
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
@@ -324,43 +362,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
             }
-        } catch (SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
     }
 
 
 
-    /*private void addPolylinesToMap(final DirectionsResult result){
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "run: result routes: " + result.routes.length);
-
-                for(DirectionsRoute route: result.routes){
-                    Log.d(TAG, "run: leg: " + route.legs[0].toString());
-                    List<com.google.maps.model.LatLng> decodedPath = PolylineEncoding.decode(route.overviewPolyline.getEncodedPath());
-
-                    List<LatLng> newDecodedPath = new ArrayList<>();
-
-                    // This loops through all the LatLng coordinates of ONE polyline.
-                    for(com.google.maps.model.LatLng latLng: decodedPath){
-
-//                        Log.d(TAG, "run: latlng: " + latLng.toString());
-
-                        newDecodedPath.add(new LatLng(
-                                latLng.lat,
-                                latLng.lng
-                        ));
-                    }
-                    Polyline polyline = GoogleMap.addPolyline(new PolylineOptions().addAll(newDecodedPath));
-                    polyline.setColor(ContextCompat.getColor(getActivity(), R.color.darkGrey));
-                    polyline.setClickable(true);
-
-                }
-            }
-        });
-    }
-
-}*/
 }
+
