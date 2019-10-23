@@ -24,7 +24,9 @@
     android:name="com.google.android.gms.maps.SupportMapFragment"
     />
 
-
+    <!--
+***CITATION*** Toolbar element and navigationView was derived from following YouTube tutorial: link: https://www.youtube.com/watch?v=zYVEMCiDcmY
+    -->
     <androidx.appcompat.widget.Toolbar
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
