@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/building_directory"
+            android:icon="@drawable/ic_list"
+            android:title="Building Directory" />
+
+        <item android:id="@+id/FindNearestRestrooms"
+            android:icon="@drawable/ic_findnearestrestroom"
+            android:title="Find nearest restrooms!" />
+
+        <item android:id="@+id/FindNearestFood"
+            android:icon="@drawable/ic_findnearestfood"
+            android:title="Find nearest Food!" />
+
+
+    </group>
+
+</menu>
