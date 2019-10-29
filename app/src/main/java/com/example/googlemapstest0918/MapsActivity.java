@@ -3,8 +3,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.content.pm.PackageManager;
@@ -18,9 +20,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.SearchView; //imported this for SearchView widget support; Website for help on searchviews: https://abhiandroid.com/ui/searchview
-import android.widget.Toolbar;
+import android.widget.Toast;
+//import android.widget.Toolbar;
+import androidx.appcompat.widget.Toolbar;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
@@ -52,6 +60,7 @@ import java.io.IOException;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+	private DrawerLayout drawer;
     private GoogleMap mMap;
     //private FusedLocationProviderClient fusedLocationProviderClient; //need this fusedlocationprovider for current device loc. //remove this... testing
     SearchView searchView; //instanciating Searchview object
@@ -79,6 +88,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
 
+        //***CITATION*** the Toolbar code below was derived from the following YouTube (Coding In Flow) tutorial: https://www.youtube.com/watch?v=zYVEMCiDcmY
+        //Toolbar toolbar = (Toolbar) findViewById((R.id.toolbar)); //remove this...testing remove toolbar code may not implement
+        //setActionBar(toolbar);
+		//drawer = findViewById(R.id.drawer_layout);
+		//ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+		//drawer.addDrawerListener(toggle);
+		//toggle.syncState();
+
+        Button findLocationButton = (Button) findViewById(R.id.current_location_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
+        findLocationButton.setOnClickListener(
+                new Button.OnClickListener(){
+                    public void onClick(View v){
+                        //Code inside here will execute on main thread after user presses button
+                    }
+                }
+        );
 
 
         // ***CITATION*** method below is derived from the following YouTube Tutorial: (Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
@@ -86,22 +111,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mGeoApiContext = new GeoApiContext.Builder().apiKey(getString(R.string.google_maps_key)).build();
         }
 
-        concatDirectionsURL(); //this method concatenates necessary information required to send Google Directions URL + retrieve Google Directions
+        //concatDirectionsURL(); //this method concatenates necessary information required to send Google Directions URL + retrieve Google Directions //remove this...testing
 
         //***CITATION*** The following ~20 lines  are derived from the following website: https://developers.google.com/maps/documentation/android-sdk/current-place-tutorial
         // Turn on the My Location layer and the related control on the map.
         getLocationPermission();
         updateLocationUI();
         // Get the current location of the device and set the position of the map.
-        //getDeviceLocation();
+
+		if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) { //this makes sure that there are google Play Services installed on device; may integrate warning message later on
+
+			System.out.println("getDeviceLocation() is working"); //for logging purposes
+			getDeviceLocation();
+		}
+		else
+		{
+			System.out.println("getDeviceLocation() is NOT working"); //for logging purposes
+		}
+
 
 
         // Construct a GeoDataClient.
-        mGeoDataClient = Places.getGeoDataClient(this, null);
+        mGeoDataClient = Places.getGeoDataClient(this, null); //remove this...testing
         // Construct a PlaceDetectionClient.
-        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
+        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null); //remove this...testing
         // Construct a FusedLocationProviderClient.
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+       mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
 
         searchView = findViewById(R.id.search_bar); // searchview object is being by our "search_bar search view we created in our activity_maps.xml file
@@ -154,7 +189,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 marker.getPosition().latitude,
                 marker.getPosition().longitude
         );
-        DirectionsApiRequest directions = new DirectionsApiRequest(mGeoApiContext);
+        DirectionsApiRequest directions = new DirectionsApiRequest(mGeoApiContext); //this DirectionsApiRequest takes in a GeoApiContext with my Google Directions API key. Without valid key, request will not go through
         directions.mode(TravelMode.WALKING); //this method explicitly sets the DirectionsApi request object to return ONLY walking directions data, not driving directions from the API. We won't need driving directions as this app is primarily for on-campus use
         directions.alternatives(false); // this method shows us all possible routes from point a to point b. To show only one route result, set to FALSE
         directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
@@ -175,7 +210,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d(TAG, "calculateDirections: overviewPolyline: " + result.routes[0].overviewPolyline.toString());
 
 
-                // addPolylinesToMap is called here because the result from Directionsresult object is returned in this onResult method
+                    // addPolylinesToMap is called here because the result from Directionsresult object is returned in this onResult method
 
                 addPolylinesToMap(result);
             }
@@ -330,19 +365,78 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    //***CITATION*** the following method was derived from the following Github page: https://github.com/googlemaps/android-samples/blob/master/tutorials/CurrentPlaceDetailsOnMap/app/src/main/java/com/example/currentplacedetailsonmap/MapsActivityCurrentPlace.java
+
     private void getDeviceLocation() {
-        /*
-         * Get the best and most recent location of the device, which may be null in rare
-         * cases when a location is not available.
-         */
-        try {
-            if (mLocationPermissionGranted) {
-                Task locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, new OnCompleteListener() {
+        Log.d(TAG, "getDeviceLocation() : getting device location"); //remove this...testing
+
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        try{
+            if(mLocationPermissionGranted){
+                Task location = mFusedLocationProviderClient.getLastLocation();
+                location.addOnCompleteListener(new OnCompleteListener() {
                     @Override
                     public void onComplete(@NonNull Task task) {
-                        if (task.isSuccessful() && task.getResult() != null) {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "onComplete: foundLocation!"); //remove this...testing
+
+                            if ((Location)task.getResult() != null){
+
+                                System.out.println("location task.getResult() successful");
+                                Location currentLocation = (Location)task.getResult();
+
+                                LatLng currentDeviceLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentDeviceLocation, 15));
+
+                                mMap.addMarker(new MarkerOptions().position(currentDeviceLocation).title("U R HERE!"));
+                            }else{
+                                System.out.println("location task.getResult() FAILED");
+                                // So far, app will crash if it doesn't find a current (or recent) location from the Android device. So we need to launch Google maps first, then app will open successfully.
+                                //CREATE TOAST MESSAGE "unable to find current GPS location!"
+                                //CREATE TOAST MESSAGE "User location will default to CSUDH Campus"
+
+
+                                //Add runtime permissions!!!!!
+
+
+
+
+
+                                // Possibly create navigation where user manually chooses start and destination of route
+                            }
+                        } else {
+                            Log.d(TAG, "onComplete: location is null!"); //remove this
+                        }
+                    }
+                });
+            }
+
+        }catch (SecurityException e){
+            Log.e(TAG, "getDeviceLocation(): security exception" + e.getMessage());
+
+        }
+
+    }
+
+
+
+
+    //***CITATION*** the following method was derived from the following Github page: https://github.com/googlemaps/android-samples/blob/master/tutorials/CurrentPlaceDetailsOnMap/app/src/main/java/com/example/currentplacedetailsonmap/MapsActivityCurrentPlace.java
+  /* private void getDeviceLocation() {
+
+        // Get the best and most recent location of the device, which may be null in rare
+        // cases when a location is not available.
+
+        try {
+            if (mLocationPermissionGranted) { //location permission has been granted at this point
+                Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener() {
+                    @Override
+                    public void onComplete(@NonNull Task task) { //called when the task completes
+
+                        // if (task.isSuccessful() && task.getResult() != null)
+                        if (task.getResult() != null) {
                             // Set the map's camera position to the current location of the device.
                             Location mLastKnownLocation = (Location) task.getResult();
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
@@ -355,7 +449,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                             // place marker here with label "U R HERE!"
-                        } else {
+                        }
+                        else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
                             mMap.moveCamera(CameraUpdateFactory
@@ -368,7 +463,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
-    }
+    } */
 
 
 

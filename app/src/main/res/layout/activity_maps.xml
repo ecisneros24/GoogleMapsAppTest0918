@@ -46,7 +46,18 @@
         android:layout_alignStart="@+id/toolbar"
         android:layout_alignLeft="@+id/toolbar"
         android:layout_marginStart="0dp"
-        android:layout_marginLeft="0dp" />
+        android:layout_marginLeft="0dp" >
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/current_location_button"
+            android:layout_gravity="right|bottom"
+            android:layout_marginTop="20dp"
+            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:text="Find Me!" />
+    </FrameLayout>
 
     <SearchView
         android:layout_width="match_parent"
