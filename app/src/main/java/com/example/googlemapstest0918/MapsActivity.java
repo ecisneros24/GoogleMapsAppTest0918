@@ -30,6 +30,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest; //used for persistent GPS location tracking
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -75,7 +76,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     static public final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private static final String TAG = "MainActivity"; //used for logging purposes when retrieving device location // remove later...testing
     private GeoApiContext mGeoApiContext = null;
-    private LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center; default user location if GPS is not available
+    private LatLng defaultUserLocation = null; //rough coordinates of CSUDH center; default user location if GPS is not available
+    //private LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //line above was this //Remove...testing
+    private boolean isUserLocatable = false;
+
+
+    private LocationRequest locationRequest;
 
 
     @Override
@@ -101,6 +107,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 new Button.OnClickListener(){
                     public void onClick(View v){
                         //Code inside here will execute on main thread after user presses button
+                        getDeviceLocation();
+                        Toast toast = Toast.makeText(MapsActivity.this, "Retrieving your GPS location...", Toast.LENGTH_SHORT);
+                        toast.show();
                     }
                 }
         );
@@ -115,6 +124,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //***CITATION*** The following ~20 lines  are derived from the following website: https://developers.google.com/maps/documentation/android-sdk/current-place-tutorial
         // Turn on the My Location layer and the related control on the map.
+        testPermissionsRequest();
         getLocationPermission();
         updateLocationUI();
         // Get the current location of the device and set the position of the map.
@@ -123,10 +133,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 			System.out.println("getDeviceLocation() is working"); //for logging purposes
 			getDeviceLocation();
+			//add toast if no Google API is not available
 		}
 		else
 		{
-			System.out.println("getDeviceLocation() is NOT working"); //for logging purposes
+			System.out.println("getDeviceLocation() is NOT working"); //for logging purposes //add toast if no Google API is not available
 		}
 
 
@@ -159,9 +170,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Address address = addressList.get(0);
                     LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
                     mMap.clear(); //this clears all previously searched (location) GPS markers from map
-                    LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
-                    //LatLng sydney = new LatLng(-34, 151);
-                    mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH")); // adds 'current' location marker on map, but really its just middle of CSUDH campus as starting point for now (until we figure out how to get actual GPS location)
+
+
+                    getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
+                    if (isUserLocatable = false){
+                        LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
+
+                        LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
+                        //LatLng sydney = new LatLng(-34, 151);
+                        mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH")); // only show if isUserLocatable == false
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
+                    }
+
+                    //Add logic to choose either CSUDH center or Device live location as 'start' for navigation (need to add a bool and put it here to see which marker to use for start"
+
                     mMap.addMarker(new MarkerOptions().position(latLng).title(location));
                     calculateDirections(mMap.addMarker(new MarkerOptions().position(latLng).title(location))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
@@ -185,19 +207,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void calculateDirections(Marker marker) { // method accepts a marker object and sends origin + destination directions request to Google. Response can include distance, routes, polyline data, etc.
         Log.d(TAG, "calculateDirections: calculating directions.");
 
-        com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng(
+
+        com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng( //this marker.GetPosition().latitude (and longitude) will get the lat and long. of the DESTINATION, passed into this method with a marker object
                 marker.getPosition().latitude,
                 marker.getPosition().longitude
         );
         DirectionsApiRequest directions = new DirectionsApiRequest(mGeoApiContext); //this DirectionsApiRequest takes in a GeoApiContext with my Google Directions API key. Without valid key, request will not go through
         directions.mode(TravelMode.WALKING); //this method explicitly sets the DirectionsApi request object to return ONLY walking directions data, not driving directions from the API. We won't need driving directions as this app is primarily for on-campus use
         directions.alternatives(false); // this method shows us all possible routes from point a to point b. To show only one route result, set to FALSE
-        directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
+
+
+        if (isUserLocatable = false){
+            LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
+
+            directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
+                    new com.google.maps.model.LatLng(
+                            defaultUserLocation.latitude,
+                            defaultUserLocation.longitude
+                    )
+            );
+        }
+        else{ //if usesIsLocatable, then obtain user Current GPS location and set that as default User Location (and to be used as origin for navigation)
+            getDeviceLocation(); //this method obtains live GPS location. If no live GPS location cannot be obtained by this method, the defaultUserLocation will not be changed at all and default will be CSUDH
+            getDeviceLocation();
+            directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
+                    new com.google.maps.model.LatLng(
+                            defaultUserLocation.latitude,
+                            defaultUserLocation.longitude
+                    )
+            );
+        }
+
+
+        // if isUserLocatable = true (if user has attainable GPS location), set their user location as what live Android device is reporting.
+
+        //liveLocation = getDeviceLocation();
+
+        //else if isUserLocatable = false, set their default location marker as CSUDH.
+        //LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //this is center of CSUDH if user device cannot retrieve live GPS location info.
+
+
+
+       /* directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
                 new com.google.maps.model.LatLng(
                         defaultUserLocation.latitude,
                         defaultUserLocation.longitude
                 )
-        );
+        ); */
+
+
         Log.d(TAG, "calculateDirections: destination: " + destination.toString());
         directions.destination(destination).setCallback(new PendingResult.Callback<DirectionsResult>() {
             @Override
@@ -278,16 +336,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          * device. The result of the permission request is handled by a callback,
          * onRequestPermissionsResult.
          */
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(), // if adequate permissions are granted, set LocationPermissionGranted flag to true
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             mLocationPermissionGranted = true;
         } else {
-            ActivityCompat.requestPermissions(this,
+            ActivityCompat.requestPermissions(this,  //else, request permissions from user with pop up dialog
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         }
     }
+
+
+//    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+//    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+//    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+
+
+    private void testPermissionsRequest(){
+        ActivityCompat.requestPermissions(this,
+                new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+    }
+// <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -299,7 +372,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mLocationPermissionGranted = true;
+                    mLocationPermissionGranted = true; //was true
                 }
             }
         }
@@ -341,14 +414,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID); // this method changes map to hybrid satellite view (satellite + 2D map + labels hybrid)
         // Add a marker in Sydney and move the camera //CHANGED TO CSUDH
-        LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
-        //LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
+
+
+        getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
+        if (isUserLocatable = false){
+            LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
+
+            LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
+            //LatLng sydney = new LatLng(-34, 151);
+            mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH")); // only show if isUserLocatable == false
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
+        }
+
+
+
+
         // used newLatLngZoom method to specify to zoom (level 16) into 'CSUDH' marker by default
         //mMap.moveCamera(CameraUpdateFactory.zoomBy(4, csudh));
 
-        getLocationPermission();
+        getLocationPermission(); //remove this...testing
 
 
         // Add polylines and polygons to the map. This section shows just
@@ -365,8 +449,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
-    private void getDeviceLocation() {
+    //method below is to get GPS current location and set global variable defaultUserLocation marker to device current location. Also will determine boolean flag 'isUserLocatble'
+    private void getDeviceLocation() { //***CITATION*** this method was derived from the following YouTube Tutorial: Coding With Mitch Get Device Location - [Android Google Maps Course]  link: https://www.youtube.com/watch?v=fPFr0So1LmI
         Log.d(TAG, "getDeviceLocation() : getting device location"); //remove this...testing
 
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -380,25 +464,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         if (task.isSuccessful()) {
                             Log.d(TAG, "onComplete: foundLocation!"); //remove this...testing
 
-                            if ((Location)task.getResult() != null){
+                            if ((Location)task.getResult() != null){ //if there is a cached last known Location from Android System, do the following:
 
                                 System.out.println("location task.getResult() successful");
-                                Location currentLocation = (Location)task.getResult();
+                                Location currentLocation = (Location)task.getResult(); //save last known location of device
 
                                 LatLng currentDeviceLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
 
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentDeviceLocation, 15));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentDeviceLocation, 15)); //moves map camera to where user is currently located, level 15 zoom
 
                                 mMap.addMarker(new MarkerOptions().position(currentDeviceLocation).title("U R HERE!"));
+                                defaultUserLocation = currentDeviceLocation; //this sets the variable defaultUserLocation to the liveCurrentLocation reported by device.
+                                isUserLocatable = true; //if the GPS location task is successful, set isUserLocatable boolean flag to true
+                                //mFusedLocationProviderClient.requestLocationUpdates() // add occasional device location updates here
                             }else{
                                 System.out.println("location task.getResult() FAILED");
                                 // So far, app will crash if it doesn't find a current (or recent) location from the Android device. So we need to launch Google maps first, then app will open successfully.
                                 //CREATE TOAST MESSAGE "unable to find current GPS location!"
                                 //CREATE TOAST MESSAGE "User location will default to CSUDH Campus"
+                                Toast toast = Toast.makeText(MapsActivity.this, "GPS location not found! Using CSUDH as default location...", Toast.LENGTH_LONG);
+                                toast.show(); // show Android Toast error message when there is no GPS location available
+                                defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                //check this website for help! https://developer.android.com/training/location/receive-location-updates.html
+
+                                // need to add a timer or an on-event listener(when device location has changed) to update location on map
+
 
 
                                 //Add runtime permissions!!!!!
-
 
 
 
@@ -407,6 +513,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             }
                         } else {
                             Log.d(TAG, "onComplete: location is null!"); //remove this
+                            Toast toast = Toast.makeText(MapsActivity.this, "GPS location permissions not granted!", Toast.LENGTH_LONG);
+                            toast.show();
                         }
                     }
                 });
