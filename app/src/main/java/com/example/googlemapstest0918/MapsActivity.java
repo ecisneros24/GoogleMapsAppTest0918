@@ -48,6 +48,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.compat.GeoDataClient;
 import com.google.android.libraries.places.compat.PlaceDetectionClient;
 import com.google.android.libraries.places.compat.Places;
+import com.google.android.material.navigation.NavigationView;
 import com.google.maps.DirectionsApiRequest;
 import com.google.maps.GeoApiContext;
 import com.google.maps.PendingResult;
@@ -62,7 +63,7 @@ import android.content.Intent;
 import java.io.IOException;
 
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
 	private DrawerLayout drawer;
     private GoogleMap mMap;
@@ -81,7 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GeoApiContext mGeoApiContext = null;
     private LatLng defaultUserLocation = null; //rough coordinates of CSUDH center; default user location if GPS is not available
     //private LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //line above was this //Remove...testing
-    private boolean isUserLocatable = false;
+    private boolean isUserLocatable = false; //flag for keeping track if user GPS location is available or not
 
 
     private LocationRequest locationRequest;
@@ -90,17 +91,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.drawer_menu, menu);
+        Log.d(TAG, "onCreateOptionsMenu(): menu inflated.");
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
+
+        Button CollegeOfEducationNav = (Button) findViewById(R.id.subitem1);
         switch (item.getItemId()){
             case R.id.action_findnearestfood:
                 Toast.makeText(this, "Food to come", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "onOptionsItemsSelected(): findNearestFood selected.");
                 return true;
             case R.id.action_findnearestrestroom:
                 Toast.makeText(this, "Restrooms to come", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "onOptionsItemsSelected(): findNearestFood selected.");
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -109,12 +115,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //getMenuInflater().inflate(R.menu.drawer_menu, menu);
+        //getMenuInflater().inflate(R.menu.drawer_menu, menu); //remove this...testing
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
+        drawer = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this); //sets a listener for when an item is clicked withing the navigationView (or slide-out hamburger menu)
 
 
         //***CITATION*** the Toolbar code below was derived from the following YouTube (Coding In Flow) tutorial: https://www.youtube.com/watch?v=zYVEMCiDcmY
@@ -140,7 +151,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // ***CITATION*** method below is derived from the following YouTube Tutorial: (Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
         if (mGeoApiContext == null) {
-            mGeoApiContext = new GeoApiContext.Builder().apiKey(getString(R.string.google_maps_key)).build();
+            mGeoApiContext = new GeoApiContext.Builder().apiKey(getString(R.string.google_maps_key)).build(); //has google maps directions API key value passed as argument
         }
 
         //concatDirectionsURL(); //this method concatenates necessary information required to send Google Directions URL + retrieve Google Directions //remove this...testing
@@ -177,7 +188,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit(String s) {
+            public boolean onQueryTextSubmit(String s) { //when user types search query in search bar and hits search... do what is below:
                 String location = searchView.getQuery().toString(); //this grabs user-entered text from SearchView search box; saves as string
                 List<Address> addressList = null;
 
@@ -191,7 +202,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         e.printStackTrace();
                     }
                     Address address = addressList.get(0);
-                    LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+
+
+                    LatLng destinationLatLng = new LatLng(address.getLatitude(), address.getLongitude()); //this stores latitude and longitude coordinates of DESTINATION (found by Geocoder) and stores in a LatLng object
                     mMap.clear(); //this clears all previously searched (location) GPS markers from map
 
 
@@ -207,9 +220,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Add logic to choose either CSUDH center or Device live location as 'start' for navigation (need to add a bool and put it here to see which marker to use for start"
 
-                    mMap.addMarker(new MarkerOptions().position(latLng).title(location));
-                    calculateDirections(mMap.addMarker(new MarkerOptions().position(latLng).title(location))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+                    mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location)); //add marker to destination
+                    calculateDirections(mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
                 }
                 return false;
             }
@@ -220,9 +233,80 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return false;
             }
         });
-
-
         //mapFragment.getMapAsync(this);
+    }
+
+    //The navigationView menu listener tutorial link (helped out with this onNavigationItemsSelected method): https://www.youtube.com/watch?v=bjYstsO1PgI
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+
+        switch(menuItem.getItemId()){
+            case R.id.subitem1:
+                Toast.makeText(this, "College Of Education", Toast.LENGTH_SHORT).show();
+                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                navigateToDestination("College of Education", 33.8654089,-118.2548097); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+                //then set destination to (for now) hard coded coordinates for College of Education
+                break;
+            case R.id.subitem2:
+                Toast.makeText(this, "Leo Cain Library", Toast.LENGTH_SHORT).show();
+                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                navigateToDestination("Leo Cain Library", 33.8640928,-118.2558234); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+                //then set destination to (for now) hard coded coordinates for Leo Cain Library
+                break;
+            case R.id.subitem3:
+                Toast.makeText(this, "Welch Hall", Toast.LENGTH_SHORT).show();
+                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                navigateToDestination("Welch Hall", 33.8662514,-118.2567457); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+                //then set destination to (for now) hard coded coordinates for Welch Hall
+                break;
+            case R.id.subitem4:
+                Toast.makeText(this, "Loker Student Union (LSU)", Toast.LENGTH_SHORT).show();
+                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                navigateToDestination("Loker Student Union (LSU)", 33.8647679,-118.2559123); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+                //then set destination to (for now) hard coded coordinates for LSU
+                break;
+            case R.id.subitem5:
+                Toast.makeText(this, "Social and Behavioral Sciences", Toast.LENGTH_SHORT).show();
+                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                navigateToDestination("Social and Behavioral Sciences", 33.8646270,-118.2548612); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+                //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+                break;
+            case R.id.action_findnearestfood:
+                Toast.makeText(this, "Showing nearest Food spots", Toast.LENGTH_SHORT).show();
+                //perhaps make a few map Markers (of restaurants, vending machines?, Grab N Go's) here and show them on map
+                //Perhaps make them clickable and then start navigation to selected marker
+                //then clear map of previous markers (other food results)
+                break;
+            case R.id.action_findnearestrestroom:
+                Toast.makeText(this, "Showing nearest restrooms", Toast.LENGTH_SHORT).show();
+                break;
+
+
+        }
+        return true;
+    }
+
+    //this method takes in following arguments (destination name (ex. LSU, Welch Hall, etc), latitude coordinate (in float), longitude coordinate (in float)
+    private void navigateToDestination(String destinationName, double latitude, double longitude){ //this method will be used for navigating to a destination selected in slide out Hamburger menu
+        LatLng destinationLatLng = new LatLng(latitude, longitude); //this stores latitude and longitude coordinates of DESTINATION (found by Geocoder) and stores in a LatLng object
+        mMap.clear(); //this clears all previously searched (location) GPS markers from map
+
+        getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
+        if (isUserLocatable = false){
+            LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
+
+            LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
+            //LatLng sydney = new LatLng(-34, 151);
+            mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH")); // only show if isUserLocatable == false
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
+        }
+
+        //Add logic to choose either CSUDH center or Device live location as 'start' for navigation (need to add a bool and put it here to see which marker to use for start"
+
+        mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(destinationName)); //add marker to destination
+        calculateDirections(mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(destinationName))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
+
     }
 
 

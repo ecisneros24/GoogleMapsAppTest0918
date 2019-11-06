@@ -32,7 +32,7 @@
 
         <item android:id="@+id/action_findnearestfood"
             android:icon="@drawable/ic_findnearestfood"
-            android:title="Find Nearest Restroom!"
+            android:title="Find Nearest Food!"
             app:showAsAction="never"/>
 
         <item android:id="@+id/action_findnearestrestroom"
