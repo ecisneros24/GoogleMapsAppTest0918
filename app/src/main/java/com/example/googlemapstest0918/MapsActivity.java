@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SearchView; //imported this for SearchView widget support; Website for help on searchviews: https://abhiandroid.com/ui/searchview
@@ -55,7 +56,9 @@ import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.DirectionsRoute;
 import com.google.maps.model.TravelMode;
 
-
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.content.Intent;
 import java.io.IOException;
 
 
@@ -83,10 +86,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private LocationRequest locationRequest;
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.drawer_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case R.id.action_findnearestfood:
+                Toast.makeText(this, "Food to come", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.action_findnearestrestroom:
+                Toast.makeText(this, "Restrooms to come", Toast.LENGTH_SHORT).show();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //getMenuInflater().inflate(R.menu.drawer_menu, menu);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
