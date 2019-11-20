@@ -1,4 +1,5 @@
 package com.example.googlemapstest0918;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Camera;
 import android.graphics.Color;
 import android.location.Geocoder; // Geocoder is for transforming address --> GPS coordinates (could be used for planting markers on maps for navigation)
@@ -38,7 +42,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -126,6 +135,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this); //sets a listener for when an item is clicked withing the navigationView (or slide-out hamburger menu)
+
+
+
+
+
 
 
         //***CITATION*** the Toolbar code below was derived from the following YouTube (Coding In Flow) tutorial: https://www.youtube.com/watch?v=zYVEMCiDcmY
@@ -233,7 +247,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return false;
             }
         });
-        //mapFragment.getMapAsync(this);
+        mapFragment.getMapAsync(this);
     }
 
     //The navigationView menu listener tutorial link (helped out with this onNavigationItemsSelected method): https://www.youtube.com/watch?v=bjYstsO1PgI
@@ -532,6 +546,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH")); // only show if isUserLocatable == false
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //LatLng NEWARK = new LatLng(40.714086, -74.228697);
+        LatLng csudh = new LatLng(33.8645994, -118.2548179);
+
+        LatLng southwest = new LatLng(33.857300, -118.260804);
+        LatLng northeast = new LatLng(33.867629, -118.247800);
+
+
+		/*BitmapDescriptor floor1 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1);
+        GroundOverlayOptions newarkMap = new GroundOverlayOptions()
+                .image(floor1)
+                .anchor(0, 1)
+                .position(new LatLng(33.8636406, -118.2549980), 8600f, 6500f)
+                .transparency((float)0.00).visible(true);
+*/
+
+
+		LatLngBounds bounds = new LatLngBounds(southwest,northeast); // get a bounds
+		// Adds a ground overlay with 50% transparency.
+		//add overlay
+
+		/*BitmapDescriptor floor1 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1);
+
+		GroundOverlayOptions test1= new GroundOverlayOptions()
+				.image(floor1).anchor(0, 1)
+				.position(csudh, 4300f, 3025f)
+				.bearing(30);
+
+
+		mMap.addGroundOverlay(test1); */
+
+
+
+		//derived from google documentation on GroundOverlays
+		GroundOverlayOptions groundOverlayOptions = new GroundOverlayOptions ();
+		groundOverlayOptions.position(csudh, 100, 100 )
+				.image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.5);
+
+		mMap.addGroundOverlay(groundOverlayOptions);
+		mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+
+		mMap.moveCamera(CameraUpdateFactory.newLatLng(csudh));
+
+		//mMap.addGroundOverlay(groundOverlay);
+
 
 
 
