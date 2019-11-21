@@ -92,6 +92,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LatLng defaultUserLocation = null; //rough coordinates of CSUDH center; default user location if GPS is not available
     //private LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //line above was this //Remove...testing
     private boolean isUserLocatable = false; //flag for keeping track if user GPS location is available or not
+	private int currentlySelectedFloor = 0;
 
 
     private LocationRequest locationRequest;
@@ -234,9 +235,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Add logic to choose either CSUDH center or Device live location as 'start' for navigation (need to add a bool and put it here to see which marker to use for start"
 
+
+                   Marker destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));  //this creates new Marker and instanciates marker object; is colored green
+
+                   // MarkerOptions destinationMarker = new MarkerOptions().position(destinationLatLng).title(location);
+
+                   // mMap.addMarker(destinationMarker); //add marker to destination
+                    calculateDirections(destinationMarker); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
+
+
+
+
+                    //OLD FUNCTIONING DESTINATION MARKER HERE  //remove this..testing
+                    /*
                     mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location)); //add marker to destination
                     calculateDirections(mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16)); */
+
+
+
                 }
                 return false;
             }
@@ -317,8 +335,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Add logic to choose either CSUDH center or Device live location as 'start' for navigation (need to add a bool and put it here to see which marker to use for start"
 
-        mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(destinationName)); //add marker to destination
-        calculateDirections(mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(destinationName))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
+        Marker destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(destinationName).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));  //this creates new Marker and instanciates marker object; is colored green
+
+
+        //mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(destinationName)); //add marker where user defined DESTINATION is located
+        calculateDirections(destinationMarker); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
 
     }
@@ -327,7 +348,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // ***CITATION*** the 'Calculate' method below is derived from the following YouTube Tutorial: (Calculating Directions with Google Directions API, Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
     private void calculateDirections(Marker marker) { // method accepts a marker object and sends origin + destination directions request to Google. Response can include distance, routes, polyline data, etc.
         Log.d(TAG, "calculateDirections: calculating directions.");
-
+		getDeviceLocation();
 
         com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng( //this marker.GetPosition().latitude (and longitude) will get the lat and long. of the DESTINATION, passed into this method with a marker object
                 marker.getPosition().latitude,
@@ -349,8 +370,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             );
         }
         else{ //if usesIsLocatable, then obtain user Current GPS location and set that as default User Location (and to be used as origin for navigation)
-            getDeviceLocation(); //this method obtains live GPS location. If no live GPS location cannot be obtained by this method, the defaultUserLocation will not be changed at all and default will be CSUDH
-            getDeviceLocation();
+            //getDeviceLocation(); //this method obtains live GPS location. If no live GPS location cannot be obtained by this method, the defaultUserLocation will not be changed at all and default will be CSUDH
+
             directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
                     new com.google.maps.model.LatLng(
                             defaultUserLocation.latitude,
@@ -391,6 +412,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     // addPolylinesToMap is called here because the result from Directionsresult object is returned in this onResult method
 
+
                 addPolylinesToMap(result);
             }
 
@@ -427,7 +449,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         ));
                     }
                     Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath)); //this actually adds the polyline (created from the sum of all the 'checkpoints' of all routes; obtained from a request to DirectionsResult object)
-                    polyline.setColor(Color.rgb(239,186,8)); // set Polyline to CSUDH yellow color to contrast the burgundy status bar... trying to have a theme going on here! Source for school theme values is on CSUDH website
+                    polyline.setColor(Color.rgb(239,0,56)); // set Polyline to CSUDH yellow color to contrast the burgundy status bar... trying to have a theme going on here! Source for school theme values is on CSUDH website
                     polyline.setClickable(true);
 
                 }
@@ -561,13 +583,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         //LatLng NEWARK = new LatLng(40.714086, -74.228697);
-        LatLng csudh = new LatLng(33.8645994, -118.2548179);
+        LatLng csudhSBS = new LatLng(33.8645994, -118.2548179); //this is middle of SBS building; used to place mapOverlay at this exact GPS Coordinates
 
-        LatLng southwest = new LatLng(33.857300, -118.260804);
+        LatLng southwest = new LatLng(33.857300, -118.260804); //remove this...testing
         LatLng northeast = new LatLng(33.867629, -118.247800);
 
 
-		/*BitmapDescriptor floor1 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1);
+		/*BitmapDescriptor floor1 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1); //remove this...testing
         GroundOverlayOptions newarkMap = new GroundOverlayOptions()
                 .image(floor1)
                 .anchor(0, 1)
@@ -593,39 +615,75 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 		//derived from google documentation on GroundOverlays
-		GroundOverlayOptions groundOverlayOptions = new GroundOverlayOptions ();
-		groundOverlayOptions.position(csudh, 100, 100 )
+
+        /*
+        GroundOverlayOptions groundOverlayOptions = new GroundOverlayOptions ();
+		groundOverlayOptions.position(csudhSBS, 100, 100 )
 				.image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.5);
 
 		mMap.addGroundOverlay(groundOverlayOptions);
-		mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+		//mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+		mMap.moveCamera(CameraUpdateFactory.newLatLng(csudhSBS));
 
-		mMap.moveCamera(CameraUpdateFactory.newLatLng(csudh));
-
-		//mMap.addGroundOverlay(groundOverlay);
-
+*/
 
 
 
-
-        // used newLatLngZoom method to specify to zoom (level 16) into 'CSUDH' marker by default
-        //mMap.moveCamera(CameraUpdateFactory.zoomBy(4, csudh));
+        drawMapOverlay(2); //remove this... testing
 
         getLocationPermission(); //remove this...testing
 
-
-        // Add polylines and polygons to the map. This section shows just
-        // a single polyline. Read the rest of the tutorial to learn more.
-        Polyline polyline1 = googleMap.addPolyline(new PolylineOptions() //remove this..testing
-                .clickable(true)
-                .add(
-                        new LatLng(-35.016, 143.321),
-                        new LatLng(-34.747, 145.592),
-                        new LatLng(-34.364, 147.891),
-                        new LatLng(-33.501, 150.217),
-                        new LatLng(-32.306, 149.248),
-                        new LatLng(-32.491, 147.309)));
     }
+
+
+
+    //this method will take in a number for what floor map to draw on the map. If a '0' is passed in, then no floor map will be drawn / other existing overlays are to be deleted. Otherwise, can select floors 1,2,3 or 4 (depending on building)
+	//this method is to be used so user can select floors manually with buttons
+    private void drawMapOverlay(int floorNumberSelection){
+
+        LatLng csudhSBS = new LatLng(33.8645994, -118.2548179); //this is middle of SBS building; used to place mapOverlay at this exact GPS Coordinates
+
+        BitmapDescriptor floor1 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds); //creating all of the .jpg files to be ready for map overlaying
+        BitmapDescriptor floor2 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds);
+        BitmapDescriptor floor3 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds);
+
+
+        //derived from google documentation on GroundOverlays
+        GroundOverlayOptions groundOverlayOptions = new GroundOverlayOptions (); //creating new groundOverlay object
+
+        switch(floorNumberSelection){ //based on argument int value; either choose a floor (value 1 or greater) or remove all drawn overlays (value 0)
+
+            case 0:
+                //remove any existing overlays on map
+                break;
+            case 1:
+                //REMOVE ANY OVERLAYS BEFORE DRAWING THIS ONE ON THE MAP (FOR MEMORY)
+
+                groundOverlayOptions.position(csudhSBS, 100, 100 )
+                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.5);
+                mMap.addGroundOverlay(groundOverlayOptions);
+                break;
+
+            case 2:
+                groundOverlayOptions.position(csudhSBS, 100, 100 )
+                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds)).transparency((float)0.5);
+                mMap.addGroundOverlay(groundOverlayOptions);
+                break;
+
+            case 3:
+                groundOverlayOptions.position(csudhSBS, 100, 100 )
+                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds)).transparency((float)0.5);
+                mMap.addGroundOverlay(groundOverlayOptions);
+                break;
+
+            default:
+
+                break;
+
+        }
+
+
+	}
 
 
     //method below is to get GPS current location and set global variable defaultUserLocation marker to device current location. Also will determine boolean flag 'isUserLocatble'
