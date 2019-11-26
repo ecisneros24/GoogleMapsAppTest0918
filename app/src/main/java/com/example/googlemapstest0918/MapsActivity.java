@@ -72,7 +72,7 @@ import android.content.Intent;
 import java.io.IOException;
 
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
+public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarkerClickListener, OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
 	private DrawerLayout drawer;
     private GoogleMap mMap;
@@ -305,6 +305,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
             case R.id.action_findnearestfood:
                 Toast.makeText(this, "Showing nearest Food spots", Toast.LENGTH_SHORT).show();
+
+                getFoodSpots();
+
                 //perhaps make a few map Markers (of restaurants, vending machines?, Grab N Go's) here and show them on map
                 //Perhaps make them clickable and then start navigation to selected marker
                 //then clear map of previous markers (other food results)
@@ -316,6 +319,83 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
         return true;
+    }
+
+
+    public boolean onMarkerClick(final Marker marker) { //derived from official Google Maps Marker documentation: https://developers.google.com/maps/documentation/android-sdk/marker
+
+        // Retrieve the data from the marker.
+        Integer clickCount = (Integer) marker.getTag();
+
+        // Check if a click count was set, then display the click count.
+        if (clickCount != null) {
+            clickCount = clickCount + 1;
+            marker.setTag(clickCount);
+            Toast.makeText(this,
+                    marker.getTitle() +
+                            " has been clicked " + clickCount + " times.",
+                    Toast.LENGTH_SHORT).show();
+
+            if(((Integer) marker.getTag()).intValue() == 2){ //this will allow user to click on a marker once (to view the name) then click on it a 2nd time to start Navigation
+                navigateToDestination(marker.getTitle(), marker.getPosition().latitude ,marker.getPosition().longitude);
+                clickCount = 0;
+                marker.setTag(clickCount); //resets clickCount of each marker to 0 once user has started navigation to it
+            }
+        }
+        
+            Toast.makeText(this,
+                    marker.getTitle() +
+                            " has been clicked",
+                    Toast.LENGTH_SHORT).show();
+
+        //Start navigation here
+        //When user clicks on a marker, we are passing the marker's longitude + latitude to navigateToDestination() method, which draws the start-to-destination route Polyline on map
+        //navigateToDestination(marker.getTitle(), marker.getPosition().latitude ,marker.getPosition().longitude);
+        //clickCount = 0;
+        //marker.setTag(clickCount); //resets clickCount of each marker to 0 once user has started navigation to it
+
+        // Return false to indicate that we have not consumed the event and that we wish
+        // for the default behavior to occur (which is for the camera to move such that the
+        // marker is centered and for the marker's info window to open, if it has one).
+        return false;
+    }
+
+
+
+
+//this method clears all old markers off maps + puts some major food / drink restaurants, stores, vending machines, etc.
+    private void getFoodSpots(){
+
+        //below is a list of major food spots (restaurants, Grab N Go's, some vending machines, etc. Not a complete list for now, until database is implemented)
+        //These are the LatLng objects (that will be used to plant markers on map)
+
+
+        //---Restaurants + Grab N Go Stores---
+        LatLng PandaExpress = new LatLng(33.8654717, -118.2558586); //inside LSU (along with Subway,
+        LatLng UnionGrind = new  LatLng(33.8636456, -118.2560222); //cafe inside 1st floor library
+        LatLng GrabNGoSBS = new  LatLng(33.8645933, -118.2549208); //Grab N Go in SBS building (floor 2)
+        LatLng GrabNGoWH = new  LatLng(33.8661431, -118.2570532); //Grab N Go in Welch Hall building (floor 1)
+        LatLng DHSportsLounge = new  LatLng(33.8652506, -118.2561738);
+
+        // ---Vending Machines ----
+        LatLng VendingMachineByGym = new  LatLng(33.8626693, -118.2555190); // Vending Machine by Gym entrance (facing SAC 2102 building)
+        LatLng VendingMachineSAC2102 = new  LatLng(33.8628029, -118.2550885); //Vending Machines by SAC 2102 west entrance
+
+        // ---
+
+
+        mMap.clear(); // clears maps of any markers to prevent user confusion
+        //all markers are being placed on map below, after map was cleared of old markers
+        mMap.addMarker(new MarkerOptions().position(PandaExpress).title("Panda Express")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(UnionGrind).title("Union Grind Cafe")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(GrabNGoSBS).title("Grab N' Go! (2nd Floor)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(GrabNGoWH).title("Grab N' Go! (1st Floor)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(DHSportsLounge).title("DH Sports Lounge (1st Floor)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(VendingMachineByGym).title("Vending Machine (near Gym Entrance)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(VendingMachineSAC2102).title("Vending Machine (near SAC-2102 entrance)")).setTag(0);
+
+        mMap.setOnMarkerClickListener(this);
+
     }
 
     //this method takes in following arguments (destination name (ex. LSU, Welch Hall, etc), latitude coordinate (in float), longitude coordinate (in float)
