@@ -10,6 +10,8 @@ import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
@@ -26,6 +28,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.SearchView; //imported this for SearchView widget support; Website for help on searchviews: https://abhiandroid.com/ui/searchview
 import android.widget.TextView;
@@ -242,42 +245,53 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    Address address = addressList.get(0);
+
+                    if (addressList != null){
+
+						Address address = addressList.get(0);
 
 
-                    LatLng destinationLatLng = new LatLng(address.getLatitude(), address.getLongitude()); //this stores latitude and longitude coordinates of DESTINATION (found by Geocoder) and stores in a LatLng object
-                    mMap.clear(); //this clears all previously searched (location) GPS markers from map
+						LatLng destinationLatLng = new LatLng(address.getLatitude(), address.getLongitude()); //this stores latitude and longitude coordinates of DESTINATION (found by Geocoder) and stores in a LatLng object
+						mMap.clear(); //this clears all previously searched (location) GPS markers from map
 
 
-                    getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
-                    if (isUserLocatable = false){
-                        LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
+						getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
+						if (isUserLocatable = false){
+							LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
 
-                        LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
-                        //LatLng sydney = new LatLng(-34, 151);
-                        mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH")); // only show if isUserLocatable == false
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
-                    }
+							LatLng csudh = new LatLng(33.8636406, -118.2549980); //rough coordinates of CSUDH center
+							//LatLng sydney = new LatLng(-34, 151);
+							mMap.addMarker(new MarkerOptions().position(csudh).title("Marker in CSUDH")); // only show if isUserLocatable == false
+							mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(csudh, 16)); //used to be newLatLng(csudh)
+						}
 
-                    //Add logic to choose either CSUDH center or Device live location as 'start' for navigation (need to add a bool and put it here to see which marker to use for start"
-
-
-                   Marker destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));  //this creates new Marker and instanciates marker object; is colored green
-
-                   // MarkerOptions destinationMarker = new MarkerOptions().position(destinationLatLng).title(location);
-
-                   // mMap.addMarker(destinationMarker); //add marker to destination
-                    calculateDirections(destinationMarker); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
+						//Add logic to choose either CSUDH center or Device live location as 'start' for navigation (need to add a bool and put it here to see which marker to use for start"
 
 
-                    //OLD FUNCTIONING DESTINATION MARKER HERE  //remove this..testing
+						Marker destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));  //this creates new Marker and instanciates marker object; is colored green
+
+						// MarkerOptions destinationMarker = new MarkerOptions().position(destinationLatLng).title(location);
+
+						// mMap.addMarker(destinationMarker); //add marker to destination
+						calculateDirections(destinationMarker); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
+						mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
+
+
+						//OLD FUNCTIONING DESTINATION MARKER HERE  //remove this..testing
                     /*
                     mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location)); //add marker to destination
                     calculateDirections(mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16)); */
 
-
+					}
+                    else
+					{
+						// Show error message toast. Let user know to check internet connection since Geocoder API is unable to successfully request information.
+						// If there is an issue requesting Geocoder results, there must be internet connectivity issues
+						hideKeyboard(MapsActivity.this); //this method forces Android system to hide keyboard (used so user can view error toast message). Go to method declaration for citation!
+						Toast toast = Toast.makeText(MapsActivity.this, "Unable to obtain directions request. Please check your internet connection and try again!", Toast.LENGTH_LONG);
+						toast.show();
+					}
                 }
                 return false;
             }
@@ -344,9 +358,31 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         return true;
     }
 
+	//***CITATION*** This hideSoftKeyboard method was derived from the following website: https://guides.codepath.com/android/Working-with-the-Soft-Keyboard
+	//remove this...testing
+	//unused
+	public void hideSoftKeyboard(View view){ //this forces Android system to hide keyboard whenever method is called
+		InputMethodManager imm =(InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	}
+
+
+	//***CITATION*** This hideKeyboard method was derived from the following website: https://stackoverflow.com/questions/1109022/how-to-set-visibility-android-soft-keyboard
+	//this method forces Android system to hide keyboard whenever method is called. Useful for showing user toast messages, which usually appear below the keyboard
+	public static void hideKeyboard(Activity activity) {
+		InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+		//Find the currently focused view, so we can grab the correct window token from it.
+		View view = activity.getCurrentFocus();
+		//If no view currently has focus, create a new one, just so we can grab a window token from it
+		if (view == null) {
+			view = new View(activity);
+		}
+		imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	}
+
 
     public boolean onMarkerClick(final Marker marker) {//***CITATION*** code to create clickable marker was derived from official Google Maps Marker documentation: https://developers.google.com/maps/documentation/android-sdk/marker
-
+	//this method allows for user to click on a marker on the map (like nearby food spots or restrooms) and instantly start navigation to the selected marker (destination)
         // Retrieve the data from the marker.
         Integer clickCount = (Integer) marker.getTag();
 
@@ -417,7 +453,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         mMap.addMarker(new MarkerOptions().position(VendingMachineByGym).title("Vending Machine (near Gym Entrance)")).setTag(0);
         mMap.addMarker(new MarkerOptions().position(VendingMachineSAC2102).title("Vending Machine (near SAC-2102 entrance)")).setTag(0);
 
-        mMap.setOnMarkerClickListener(this);
+        mMap.setOnMarkerClickListener(this); //this allows markers to be clickable. In case user wants to select a potential point of interest as a destination
 
     }
 
@@ -725,7 +761,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
 
 
-        drawMapOverlay(2); //remove this... testing
+        //drawMapOverlay(2); //remove this... testing
 
         getLocationPermission(); //remove this...testing
 
