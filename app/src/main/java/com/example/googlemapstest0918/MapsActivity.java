@@ -28,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SearchView; //imported this for SearchView widget support; Website for help on searchviews: https://abhiandroid.com/ui/searchview
+import android.widget.TextView;
 import android.widget.Toast;
 //import android.widget.Toolbar;
 import androidx.appcompat.widget.Toolbar;
@@ -93,6 +94,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     //private LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //line above was this //Remove...testing
     private boolean isUserLocatable = false; //flag for keeping track if user GPS location is available or not
 	private int currentlySelectedFloor = 0;
+    public TextView NavigationTextViewObject = null;
 
 
     private LocationRequest locationRequest;
@@ -140,9 +142,6 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
 
 
-
-
-
         //***CITATION*** the Toolbar code below was derived from the following YouTube (Coding In Flow) tutorial: https://www.youtube.com/watch?v=zYVEMCiDcmY
         //Toolbar toolbar = (Toolbar) findViewById((R.id.toolbar)); //remove this...testing remove toolbar code may not implement
         //setActionBar(toolbar);
@@ -163,6 +162,34 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 }
         );
 
+        Button floor1button = (Button) findViewById(R.id.floor1_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
+        floor1button.setOnClickListener(
+                new Button.OnClickListener(){
+                    public void onClick(View v){
+                        //Code inside here will execute on main thread after user presses button
+
+                        drawMapOverlay(1);
+                        Toast toast = Toast.makeText(MapsActivity.this, "Displaying SBS Building Floor 1 indoor map...", Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
+                }
+        );
+
+        Button floor2button = (Button) findViewById(R.id.floor2_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
+        floor2button.setOnClickListener(
+                new Button.OnClickListener(){
+                    public void onClick(View v){
+                        //Code inside here will execute on main thread after user presses button
+
+                        drawMapOverlay(2);
+                        Toast toast = Toast.makeText(MapsActivity.this, "Displaying SBS Building Floor 2 indoor map...", Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
+                }
+        );
+
+        NavigationTextViewObject = (TextView) findViewById(R.id.NavigationTextView); //this instantiates a textview object, reference to the Textview UI Element created in the activity_maps.xml file
+        NavigationTextViewObject.setText("This is a test");
 
         // ***CITATION*** method below is derived from the following YouTube Tutorial: (Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
         if (mGeoApiContext == null) {
@@ -188,7 +215,6 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 		{
 			System.out.println("getDeviceLocation() is NOT working"); //for logging purposes //add toast if no Google API is not available
 		}
-
 
 
         // Construct a GeoDataClient.
@@ -245,14 +271,11 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16));
 
 
-
-
                     //OLD FUNCTIONING DESTINATION MARKER HERE  //remove this..testing
                     /*
                     mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location)); //add marker to destination
                     calculateDirections(mMap.addMarker(new MarkerOptions().position(destinationLatLng).title(location))); //this method is taking the marker as argument(created from user-inputted search) and creating navigation directions
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 16)); */
-
 
 
                 }
@@ -322,7 +345,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     }
 
 
-    public boolean onMarkerClick(final Marker marker) { //derived from official Google Maps Marker documentation: https://developers.google.com/maps/documentation/android-sdk/marker
+    public boolean onMarkerClick(final Marker marker) {//***CITATION*** code to create clickable marker was derived from official Google Maps Marker documentation: https://developers.google.com/maps/documentation/android-sdk/marker
 
         // Retrieve the data from the marker.
         Integer clickCount = (Integer) marker.getTag();
@@ -342,7 +365,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 marker.setTag(clickCount); //resets clickCount of each marker to 0 once user has started navigation to it
             }
         }
-        
+
             Toast.makeText(this,
                     marker.getTitle() +
                             " has been clicked",
@@ -363,7 +386,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
 
 
-//this method clears all old markers off maps + puts some major food / drink restaurants, stores, vending machines, etc.
+//this method clears all old markers off maps + puts some major food / drink restaurants, stores, vending machines, etc. User can then choose from available
     private void getFoodSpots(){
 
         //below is a list of major food spots (restaurants, Grab N Go's, some vending machines, etc. Not a complete list for now, until database is implemented)
@@ -486,8 +509,13 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 Log.d(TAG, "calculateDirections: routes: " + result.routes[0].toString());
                 Log.d(TAG, "calculateDirections: duration: " + result.routes[0].legs[0].duration);
                 Log.d(TAG, "calculateDirections: distance: " + result.routes[0].legs[0].distance);
+                Log.d(TAG, "calculateDirections: Steps: " + result.routes[0].legs[0].steps[0].htmlInstructions);
                 Log.d(TAG, "calculateDirections: geocodedWayPoints: " + result.geocodedWaypoints[0].toString());
                 Log.d(TAG, "calculateDirections: overviewPolyline: " + result.routes[0].overviewPolyline.toString());
+
+                //this following line sends the htmlInstructions to the TextView object (that will display text "turn-by-turn" directions to user).
+                // Here it displays Google Maps Directions API-supplied directions, but will possibly be used with our own text based directions later on.
+                NavigationTextViewObject.setText(result.routes[0].legs[0].steps[0].htmlInstructions);
 
 
                     // addPolylinesToMap is called here because the result from Directionsresult object is returned in this onResult method
@@ -650,18 +678,6 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
         //LatLng NEWARK = new LatLng(40.714086, -74.228697);
         LatLng csudhSBS = new LatLng(33.8645994, -118.2548179); //this is middle of SBS building; used to place mapOverlay at this exact GPS Coordinates
 
@@ -738,21 +754,23 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 break;
             case 1:
                 //REMOVE ANY OVERLAYS BEFORE DRAWING THIS ONE ON THE MAP (FOR MEMORY)
-
+                groundOverlayOptions.visible(false);
                 groundOverlayOptions.position(csudhSBS, 100, 100 )
                         .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.5);
                 mMap.addGroundOverlay(groundOverlayOptions);
                 break;
 
             case 2:
+                groundOverlayOptions.visible(false);
                 groundOverlayOptions.position(csudhSBS, 100, 100 )
-                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds)).transparency((float)0.5);
+                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds)).transparency((float)0.3);
                 mMap.addGroundOverlay(groundOverlayOptions);
                 break;
 
             case 3:
+                groundOverlayOptions.visible(false);
                 groundOverlayOptions.position(csudhSBS, 100, 100 )
-                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds)).transparency((float)0.5);
+                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds)).transparency((float)0.3);
                 mMap.addGroundOverlay(groundOverlayOptions);
                 break;
 

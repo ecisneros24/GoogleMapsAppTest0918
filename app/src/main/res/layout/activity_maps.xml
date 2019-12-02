@@ -49,25 +49,69 @@
         android:layout_marginLeft="0dp" >
 
         <Button
+            android:id="@+id/current_location_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/current_location_button"
-            android:layout_gravity="right|bottom"
+            android:layout_gravity="bottom|right"
             android:layout_marginTop="20dp"
+            android:minWidth="70dip"
+            android:minHeight="40dip"
             android:padding="10dp"
             android:paddingRight="10dp"
             android:text="Find Me!" />
+
+        <Button
+            android:id="@+id/floor1_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|left"
+            android:layout_marginRight="10dp"
+            android:minWidth="60dp"
+            android:minHeight="40dip"
+            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:text="1" />
+
+        <Button
+            android:id="@+id/floor2_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:layout_marginTop="20dp"
+            android:minWidth="60dip"
+            android:minHeight="40dip"
+            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:text="2" />
+
+        <TextView
+            android:id="@+id/NavigationTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|top"
+            android:layout_marginTop="80dp"
+            android:text="hello"
+            android:textAllCaps="false"
+            android:textColor="@color/quantum_amberA400"
+            android:textStyle="bold" />
+
+
     </FrameLayout>
 
     <SearchView
+        android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/search_bar"
-        android:queryHint="Where to next, Toro?"
-        android:iconifiedByDefault="false"
-        android:layout_margin="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
         android:background="@color/common_google_signin_btn_text_dark_default"
-    />
+        android:iconifiedByDefault="false"
+        android:queryHint="Where to next, Toro?" />
+
 
 </RelativeLayout>
 
