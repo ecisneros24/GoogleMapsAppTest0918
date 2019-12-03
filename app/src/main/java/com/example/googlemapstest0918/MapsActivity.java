@@ -25,6 +25,7 @@ import android.os.Bundle;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -79,7 +80,7 @@ import java.io.IOException;
 public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarkerClickListener, OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
 	private DrawerLayout drawer;
-    private GoogleMap mMap;
+    private GoogleMap mMap; //this mMap object is a google maps object, will call many methods from this object
     //private FusedLocationProviderClient fusedLocationProviderClient; //need this fusedlocationprovider for current device loc. //remove this... testing
     SearchView searchView; //instanciating Searchview object
     //Location mLocationPermissionGranted; //REMOVE LATER...testing
@@ -96,9 +97,12 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     private LatLng defaultUserLocation = null; //rough coordinates of CSUDH center; default user location if GPS is not available
     //private LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //line above was this //Remove...testing
     private boolean isUserLocatable = false; //flag for keeping track if user GPS location is available or not
+    boolean isUserNavigating = false; //bool flag for keeping track if map camera should be stationary or follow user.
 	private int currentlySelectedFloor = 0;
     public TextView NavigationTextViewObject = null;
-
+    public GroundOverlay imageOverlaySBS1; //instanciating an map overlay here
+    public GroundOverlay imageOverlaySBS2; //instanciating an map overlay here
+    public GroundOverlay imageOverlaySBS3; //instanciating an map overlay here
 
     private LocationRequest locationRequest;
 
@@ -158,7 +162,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 new Button.OnClickListener(){
                     public void onClick(View v){
                         //Code inside here will execute on main thread after user presses button
-                        getDeviceLocation();
+                        getDeviceLocation(18);
                         Toast toast = Toast.makeText(MapsActivity.this, "Retrieving your GPS location...", Toast.LENGTH_SHORT);
                         toast.show();
                     }
@@ -211,7 +215,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 		if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) { //this makes sure that there are google Play Services installed on device; may integrate warning message later on
 
 			System.out.println("getDeviceLocation() is working"); //for logging purposes
-			getDeviceLocation();
+			getDeviceLocation(15);
 			//add toast if no Google API is not available
 		}
 		else
@@ -255,7 +259,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 						mMap.clear(); //this clears all previously searched (location) GPS markers from map
 
 
-						getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
+						getDeviceLocation(15); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
 						if (isUserLocatable = false){
 							LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
 
@@ -312,31 +316,31 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         switch(menuItem.getItemId()){
             case R.id.subitem1:
                 Toast.makeText(this, "College Of Education", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
                 navigateToDestination("College of Education", 33.8654089,-118.2548097); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
                 //then set destination to (for now) hard coded coordinates for College of Education
                 break;
             case R.id.subitem2:
                 Toast.makeText(this, "Leo Cain Library", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
                 navigateToDestination("Leo Cain Library", 33.8640928,-118.2558234); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
                 //then set destination to (for now) hard coded coordinates for Leo Cain Library
                 break;
             case R.id.subitem3:
                 Toast.makeText(this, "Welch Hall", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
                 navigateToDestination("Welch Hall", 33.8662514,-118.2567457); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
                 //then set destination to (for now) hard coded coordinates for Welch Hall
                 break;
             case R.id.subitem4:
                 Toast.makeText(this, "Loker Student Union (LSU)", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
                 navigateToDestination("Loker Student Union (LSU)", 33.8647679,-118.2559123); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
                 //then set destination to (for now) hard coded coordinates for LSU
                 break;
             case R.id.subitem5:
                 Toast.makeText(this, "Social and Behavioral Sciences", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
                 navigateToDestination("Social and Behavioral Sciences", 33.8646270,-118.2548612); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
                 break;
@@ -462,7 +466,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         LatLng destinationLatLng = new LatLng(latitude, longitude); //this stores latitude and longitude coordinates of DESTINATION (found by Geocoder) and stores in a LatLng object
         mMap.clear(); //this clears all previously searched (location) GPS markers from map
 
-        getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
+        getDeviceLocation(15); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
         if (isUserLocatable = false){
             LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
 
@@ -487,7 +491,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     // ***CITATION*** the 'Calculate' method below is derived from the following YouTube Tutorial: (Calculating Directions with Google Directions API, Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
     private void calculateDirections(Marker marker) { // method accepts a marker object and sends origin + destination directions request to Google. Response can include distance, routes, polyline data, etc.
         Log.d(TAG, "calculateDirections: calculating directions.");
-		getDeviceLocation();
+		getDeviceLocation(15);
 
         com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng( //this marker.GetPosition().latitude (and longitude) will get the lat and long. of the DESTINATION, passed into this method with a marker object
                 marker.getPosition().latitude,
@@ -551,7 +555,26 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
                 //this following line sends the htmlInstructions to the TextView object (that will display text "turn-by-turn" directions to user).
                 // Here it displays Google Maps Directions API-supplied directions, but will possibly be used with our own text based directions later on.
-                NavigationTextViewObject.setText(result.routes[0].legs[0].steps[0].htmlInstructions);
+                //Html.fromHtml(result.routes[0].legs[0].steps[0].htmlInstructions).toString();
+
+                //NavigationTextViewObject.setText(Html.fromHtml(result.routes[0].legs[0].steps[0].htmlInstructions).toString()); //this displays google Directions API-supplied routing directions to user.
+
+
+              /*  for (DirectionsRoute route : result.routes){
+
+                    NavigationTextViewObject.setText(Html.fromHtml(result.routes[0].legs[0].steps[0].htmlInstructions).toString());
+
+                } */
+
+
+                for (int i=0; i<result.routes.length; i++) //this goes through the "routes" directions array supplied by Google Maps API and prints out the route directions on screen (and in a log)
+                {
+                    NavigationTextViewObject.setText(Html.fromHtml(result.routes[i].legs[i].steps[i].htmlInstructions).toString());
+                    Log.d(TAG, "NavigationTextView: " + Html.fromHtml(result.routes[i].legs[i].steps[i].htmlInstructions).toString());
+                }
+
+
+                    //  NavigationTextViewObject.setText(result.routes[0].legs[0].steps[0].htmlInstructions);
 
 
                     // addPolylinesToMap is called here because the result from Directionsresult object is returned in this onResult method
@@ -703,7 +726,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         // Add a marker in Sydney and move the camera //CHANGED TO CSUDH
 
 
-        getDeviceLocation(); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
+        getDeviceLocation(15); //this method will determine if user is locatable. If not, CSUDH center will be default user location for now (if statement below)
         if (isUserLocatable = false){
             LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //if user GPS location cannot be found (no signal, no permissions etc), set default user Location to center of CSUDh
 
@@ -761,7 +784,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
 
 
-        //drawMapOverlay(2); //remove this... testing
+        drawMapOverlay(2); //remove this... testing
 
         getLocationPermission(); //remove this...testing
 
@@ -775,6 +798,9 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
         LatLng csudhSBS = new LatLng(33.8645994, -118.2548179); //this is middle of SBS building; used to place mapOverlay at this exact GPS Coordinates
 
+        LatLng southwest = new LatLng(33.8643183, -118.2552353);
+        LatLng northeast = new LatLng(33.8648464, -118.2544142);
+        LatLngBounds SBS_Bounds = new LatLngBounds(southwest, northeast); //we are creating LatLngBounds object so our jpg image of the floor plans can overlay right on top of the SBS building.
         BitmapDescriptor floor1 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds); //creating all of the .jpg files to be ready for map overlaying
         BitmapDescriptor floor2 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds);
         BitmapDescriptor floor3 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds);
@@ -790,24 +816,70 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 break;
             case 1:
                 //REMOVE ANY OVERLAYS BEFORE DRAWING THIS ONE ON THE MAP (FOR MEMORY)
-                groundOverlayOptions.visible(false);
-                groundOverlayOptions.position(csudhSBS, 100, 100 )
-                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.5);
-                mMap.addGroundOverlay(groundOverlayOptions);
+                if (imageOverlaySBS1 != null){
+                    imageOverlaySBS1.remove();
+                }
+                if (imageOverlaySBS2 != null){
+                    imageOverlaySBS2.remove();
+                }
+                if (imageOverlaySBS3 != null) {
+                    imageOverlaySBS3.remove();
+                }
+
+                //this is old working overlay positioning (using one center coordinate as positioning
+                // groundOverlayOptions.position(csudhSBS, 100, 100 )
+                //.image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.3);
+
+                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.3).visible(true); //this uses LatLngbounds to position the overlay
+
+                imageOverlaySBS1 = mMap.addGroundOverlay(groundOverlayOptions); //this line actually overlays the created groundOverlay onto the map; also stores it as GroundOverlay
+
+               // mMap.addGroundOverlay(groundOverlayOptions); //remove this...testing   this is old working code to add overlay to map.
                 break;
 
             case 2:
-                groundOverlayOptions.visible(false);
-                groundOverlayOptions.position(csudhSBS, 100, 100 )
-                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds)).transparency((float)0.3);
-                mMap.addGroundOverlay(groundOverlayOptions);
+                //REMOVE ANY OVERLAYS BEFORE DRAWING THIS ONE ON THE MAP (FOR MEMORY)
+                if (imageOverlaySBS1 != null){
+                    imageOverlaySBS1.remove();
+                }
+                if (imageOverlaySBS2 != null){
+                    imageOverlaySBS2.remove();
+                }
+                if (imageOverlaySBS3 != null) {
+                    imageOverlaySBS3.remove();
+                }
+
+                //in case 1, I have commented out an older working way to position map overlay using only 1 central GPS Coordinate in middle of building
+                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds)).transparency((float)0.3).visible(true); //this uses LatLngbounds to position the overlay (uses 2 GPS coordinates @ corners of buildings for best overlay positioning)
+
+
+
+                imageOverlaySBS2 = mMap.addGroundOverlay(groundOverlayOptions);
+                // mMap.addGroundOverlay(groundOverlayOptions); //remove this...testing old working code to add overlay to map.
                 break;
 
             case 3:
-                groundOverlayOptions.visible(false);
-                groundOverlayOptions.position(csudhSBS, 100, 100 )
-                        .image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds)).transparency((float)0.3);
-                mMap.addGroundOverlay(groundOverlayOptions);
+                //REMOVE ANY OVERLAYS BEFORE DRAWING THIS ONE ON THE MAP (FOR MEMORY)
+                //REMOVE ANY OVERLAYS BEFORE DRAWING THIS ONE ON THE MAP (FOR MEMORY)
+                if (imageOverlaySBS1 != null){
+                    imageOverlaySBS1.remove();
+                }
+                if (imageOverlaySBS2 != null){
+                    imageOverlaySBS2.remove();
+                }
+                if (imageOverlaySBS3 != null) {
+                    imageOverlaySBS3.remove();
+                }
+
+
+
+                //in case 1, I have commented out an older working way to position map overlay using only 1 central GPS Coordinate in middle of building
+                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds)).transparency((float)0.3).visible(true); //this uses LatLngbounds to position the overlay (uses 2 GPS coordinates @ corners of buildings for best overlay positioning)
+
+
+
+                imageOverlaySBS3 = mMap.addGroundOverlay(groundOverlayOptions);
+                // mMap.addGroundOverlay(groundOverlayOptions); //remove this...testing old working code to add overlay to map.
                 break;
 
             default:
@@ -820,8 +892,16 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 	}
 
 
+    public void onLocationChanged(Location location) {
+
+        LatLng latLng = new LatLng( location.getLatitude(), location.getLongitude() );
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(18));
+    }
+
+
     //method below is to get GPS current location and set global variable defaultUserLocation marker to device current location. Also will determine boolean flag 'isUserLocatble'
-    private void getDeviceLocation() { //***CITATION*** this method was derived from the following YouTube Tutorial: Coding With Mitch Get Device Location - [Android Google Maps Course]  link: https://www.youtube.com/watch?v=fPFr0So1LmI
+    private void getDeviceLocation(final int zoomLevel) { //***CITATION*** this method was derived from the following YouTube Tutorial: Coding With Mitch Get Device Location - [Android Google Maps Course]  link: https://www.youtube.com/watch?v=fPFr0So1LmI
         Log.d(TAG, "getDeviceLocation() : getting device location"); //remove this...testing
 
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -842,7 +922,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
                                 LatLng currentDeviceLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
 
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentDeviceLocation, 15)); //moves map camera to where user is currently located, level 15 zoom
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentDeviceLocation, zoomLevel)); //moves map camera to where user is currently located, level 15 zoom
 
                                 mMap.addMarker(new MarkerOptions().position(currentDeviceLocation).title("U R HERE!"));
                                 defaultUserLocation = currentDeviceLocation; //this sets the variable defaultUserLocation to the liveCurrentLocation reported by device.
