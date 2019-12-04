@@ -102,6 +102,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     boolean isUserNavigating = false; //bool flag for keeping track if map camera should be stationary or follow user.
 	private int currentlySelectedFloor = 0;
     public TextView NavigationTextViewObject = null;
+    public TextView LargeNavigationTextObject = null;
     public GroundOverlay imageOverlaySBS1; //instanciating an map overlay here
     public GroundOverlay imageOverlaySBS2; //instanciating an map overlay here
     public GroundOverlay imageOverlaySBS3; //instanciating an map overlay here
@@ -213,7 +214,33 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 				}
 		);
 
+		Button expandTextviewButton = (Button) findViewById(R.id.expandTextview_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
+		expandTextviewButton.setOnClickListener(
+				new Button.OnClickListener(){
+					public void onClick(View v){
+						//Code inside here will execute on main thread after user presses button
+						showTextNavigationInstructions();
+						Toast toast = Toast.makeText(MapsActivity.this, "Expanding Navigation Instructions...", Toast.LENGTH_SHORT);
+						toast.show();
+					}
+				}
+		);
+
+		Button hideTextviewButton = (Button) findViewById(R.id.hideTextview_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
+		hideTextviewButton.setOnClickListener(
+				new Button.OnClickListener(){
+					public void onClick(View v){
+						//Code inside here will execute on main thread after user presses button
+						hideTextViewNavigationInstructions();
+						Toast toast = Toast.makeText(MapsActivity.this, "Hiding Navigation Instructions...", Toast.LENGTH_SHORT);
+						toast.show();
+					}
+				}
+		);
+
         NavigationTextViewObject = (TextView) findViewById(R.id.NavigationTextView); //this instantiates a textview object, reference to the Textview UI Element created in the activity_maps.xml file
+		LargeNavigationTextObject  = (TextView) findViewById(R.id.LargeNavigationTextView); //this instantiates a textview object, reference to the Textview UI Element created in the activity_maps.xml file
+		 LargeNavigationTextObject.setVisibility(View.INVISIBLE);//set initial visibility of textview to GONE, until it is needed
 
 
         // ***CITATION*** method below is derived from the following YouTube Tutorial: (Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
@@ -680,6 +707,12 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 navigateToDestination(marker.getTitle(), marker.getPosition().latitude ,marker.getPosition().longitude);
                 clickCount = 0;
                 marker.setTag(clickCount); //resets clickCount of each marker to 0 once user has started navigation to it
+
+
+				if (marker.getTitle().contains("SBS")){
+					SBSindoorNavigationInstructions(1, "SBS Restroom",  marker );
+				}
+
             }
         }
 
@@ -697,25 +730,86 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         return false;
     }
 
-
-    private void indoorNavigationInstructions(){
-
-        //place markers on staircases
-        // add text instructions to climb to specific floor (perhaps in middle of building)
-        // add text instructions to head to certain direction (south, north) towards classroom
-        //Possibly add an arrow image (left = west, right = east, up = north, down = south) indicating what direction to walk from central staircase.
+//these are indoor navigation instructions for SBS building
 
 
-        //** Figure out how to get bearing to destination relative to current location
+	private void showTextNavigationInstructions(){
+    	//when user presses this button, a larger textview will show up listing all  text instructions for route, make scrollable
+		//hide when user clicks Hide button
 
-        // Go to Floor 2, Head west, then turn left at hallway.
-        //Destination will be to your right
+		NavigationTextViewObject.setVisibility(View.VISIBLE);
+		LargeNavigationTextObject.setVisibility(View.VISIBLE);
+	}
+
+	private void hideTextViewNavigationInstructions(){ //upon user request or press of UI button, this hides textview
+
+		LargeNavigationTextObject.setVisibility(View.GONE);
+		NavigationTextViewObject.setVisibility(View.GONE);
+
+	}
 
 
-        //hardcoded classrooms as test
+    private void SBSindoorNavigationInstructions(int floorNum, String room, Marker destination) { //need to pass a floor number of room, the room name (ie. E122), and a Marker Object as a destination
 
-        LatLng SBSE126 = new LatLng(33.8644736, -118.2549322); //E126, Floor 1 (Senior Design Classroom)
-        LatLng SAC2102 = new LatLng(33.8628113, -118.2550489); //SAC2102, Floor 1
+
+		// add text instructions to climb to specific floor (perhaps in middle of building)
+		// add text instructions to head to certain direction (south, north) towards classroom
+		//Possibly add an arrow image (left = west, right = east, up = north, down = south) indicating what direction to walk from central staircase.
+
+		// Go to Floor 2, Head west, then turn left at hallway.
+		//Destination will be to your right
+		int selectedFloorNum = floorNum;
+
+
+		//extract room number from
+
+
+		//Floor 1 instructions
+		if (selectedFloorNum == 1) { // if
+
+			drawMapOverlay(1); //show map for floor 1
+			//Make smaller marker objects of staircases (colored yellow) on Floor 1:
+			LargeNavigationTextObject.setVisibility(View.VISIBLE);
+			LargeNavigationTextObject.setText("- Head to Floor 1 in SBS; stairs are yellow markers\r\n - Head towards green marker on map: " + room);
+			//LargeNavigationTextObject.setText("\r\nHead towards red marker on map. Room: " + room);
+
+			//Head towards red marker on map
+
+			//NorthWest Quadrant
+
+			//NorthEast Quadrant
+
+			//SouthWest Quadrant
+
+			//SouthEast Quadrant
+
+
+		}
+
+
+		//Floor 2 instructions
+		if (selectedFloorNum == 2) {
+			drawMapOverlay(2); //show map for floor 1
+			//Make smaller marker objects of staircases (colored yellow) on Floor 1:
+			LargeNavigationTextObject.setVisibility(View.VISIBLE);
+			LargeNavigationTextObject.setText("- Head to Floor 2 in SBS; stairs are yellow markers\r\n - Head towards green marker on map: " + room);
+
+		}
+
+
+		//Floor 3 instructions
+		if (selectedFloorNum == 3) {
+			drawMapOverlay(3); //show map for floor 1
+			//Make smaller marker objects of staircases (colored yellow) on Floor 1:
+			LargeNavigationTextObject.setVisibility(View.VISIBLE);
+			LargeNavigationTextObject.setText("- Head to Floor 3 in SBS; stairs are yellow markers\r\n - Head towards green marker on map: " + room);
+
+
+		}
+
+
+		LatLng SBSE126 = new LatLng(33.8644736, -118.2549322); //E126, Floor 1 (Senior Design Classroom)
+		LatLng SAC2102 = new LatLng(33.8628113, -118.2550489); //SAC2102, Floor 1
 
 
     }
@@ -727,7 +821,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         //These are the LatLng objects (that will be used to plant markers on map)
 
 
-        LatLng SBSBathrooms = new LatLng(33.864750, -118.254987); //bathrooms inside center of SBS (floors 1 + 2)
+        LatLng SBSBathrooms = new LatLng(33.8646746, -118.2548300); //bathrooms inside center of SBS (floors 1 + 2)
         LatLng SAC2Bathrooms = new LatLng(33.8628333, -118.2546607); //bathrooms inside center of South Academic Complex 2
         LatLng SAC3Bathrooms = new LatLng(33.8624775, -118.2543623); //bathrooms inside center of South Academic Complex 3
         LatLng LSUSouthBathrooms = new LatLng(33.8647005, -118.2558123); //bathrooms inside South side of LSU (near Bookstore) (Floors 1 + 2)
@@ -854,8 +948,6 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                     )
             );
         }
-
-
         // if isUserLocatable = true (if user has attainable GPS location), set their user location as what live Android device is reporting.
 
         //liveLocation = getDeviceLocation();
@@ -863,15 +955,12 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         //else if isUserLocatable = false, set their default location marker as CSUDH.
         //LatLng defaultUserLocation = new LatLng(33.8636406, -118.2549980); //this is center of CSUDH if user device cannot retrieve live GPS location info.
 
-
-
        /* directions.origin( // this sets the origin / starting point of navigation; want this to be device current location, but will likely default to center of CSUDH is GPS signal is not avail.
                 new com.google.maps.model.LatLng(
                         defaultUserLocation.latitude,
                         defaultUserLocation.longitude
                 )
         ); */
-
 
         Log.d(TAG, "calculateDirections: destination: " + destination.toString());
         directions.destination(destination).setCallback(new PendingResult.Callback<DirectionsResult>() {
@@ -901,6 +990,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
                 for (int i=0; i<result.routes.length; i++) //this goes through the "routes" directions array supplied by Google Maps API and prints out the route directions on screen (and in a log)
                 {
+					NavigationTextViewObject.setVisibility(View.VISIBLE);
                     NavigationTextViewObject.setText(Html.fromHtml(result.routes[i].legs[i].steps[i].htmlInstructions).toString());
                     Log.d(TAG, "NavigationTextView: " + Html.fromHtml(result.routes[i].legs[i].steps[i].htmlInstructions).toString());
                 }
@@ -1129,7 +1219,6 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     private void drawMapOverlay(int floorNumberSelection){
 
         LatLng csudhSBS = new LatLng(33.8645994, -118.2548179); //this is middle of SBS building; used to place mapOverlay at this exact GPS Coordinates
-
         LatLng southwest = new LatLng(33.8643183, -118.2552353);
         LatLng northeast = new LatLng(33.8648742, -118.2544119);
         LatLngBounds SBS_Bounds = new LatLngBounds(southwest, northeast); //we are creating LatLngBounds object so our jpg image of the floor plans can overlay right on top of the SBS building.
@@ -1137,8 +1226,22 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         BitmapDescriptor floor2 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds);
         BitmapDescriptor floor3 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds);
 
+		LatLng staircaseNortheast = new LatLng(33.8648742, -118.2544119);
+		LatLng staircaseSouthwest = new LatLng(33.8643183, -118.2552353);
+		LatLng staircaseNorthwest = new LatLng(33.8648411, -118.2552202);
+		LatLng staircaseCentral = new LatLng(33.8645719, -118.2548270);
 
-        //derived from google documentation on GroundOverlays
+
+		//these marker objects are for purpose of showing user staircases on floors
+		Marker staircaseNortheastMarker = mMap.addMarker(new MarkerOptions().position(staircaseNortheast).title("Northeast Staircase").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));  //this creates new Marker and instanciates marker object; is colored yellow
+		Marker staircaseSouthwestMarker = mMap.addMarker(new MarkerOptions().position(staircaseSouthwest).title("Southwest Staircase").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));  //this creates new Marker and instanciates marker object; is colored yellow
+		Marker staircaseNorthwestMarker = mMap.addMarker(new MarkerOptions().position(staircaseNorthwest).title("Northwest Staircase").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));  //this creates new Marker and instanciates marker object; is colored yellow
+		Marker staircaseCentralMarker = mMap.addMarker(new MarkerOptions().position(staircaseCentral).title("Central Staircase").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));  //this creates new Marker and instanciates marker object; is colored yellow
+
+
+
+
+		//derived from google documentation on GroundOverlays
         GroundOverlayOptions groundOverlayOptions = new GroundOverlayOptions (); //creating new groundOverlay object
 
         switch(floorNumberSelection){ //based on argument int value; either choose a floor (value 1 or greater) or remove all drawn overlays (value 0)
