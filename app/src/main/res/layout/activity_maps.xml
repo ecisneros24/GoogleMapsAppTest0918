@@ -47,17 +47,17 @@
         android:layout_marginStart="0dp"
         android:layout_marginLeft="0dp" >
 
-        <Button
+        <ImageButton
             android:id="@+id/current_location_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
-            android:layout_marginTop="20dp"
-            android:minWidth="70dip"
+            android:layout_gravity="right"
+            android:layout_marginTop="110dp"
+            android:minWidth="55dip"
             android:minHeight="40dip"
             android:padding="10dp"
             android:paddingRight="10dp"
-            android:text="Find Me!" />
+            android:src="@drawable/ic_location_icon" />
 
         <Button
             android:id="@+id/floor1_button"
@@ -83,13 +83,26 @@
             android:paddingRight="10dp"
             android:text="2" />
 
+
+        <Button
+            android:id="@+id/floor3_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|right"
+            android:layout_marginTop="20dp"
+            android:minWidth="60dip"
+            android:minHeight="40dip"
+            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:text="3" />
+
         <TextView
             android:id="@+id/NavigationTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center|top"
-            android:layout_marginTop="80dp"
-            android:text="hello"
+            android:layout_marginTop="65dp"
+            android:background="@android:drawable/screen_background_dark_transparent"
             android:textAllCaps="false"
             android:textColor="@color/quantum_amberA400"
             android:textStyle="bold" />

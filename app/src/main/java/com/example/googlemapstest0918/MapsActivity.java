@@ -31,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SearchView; //imported this for SearchView widget support; Website for help on searchviews: https://abhiandroid.com/ui/searchview
 import android.widget.TextView;
@@ -161,7 +162,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 		//drawer.addDrawerListener(toggle);
 		//toggle.syncState();
 
-        Button findLocationButton = (Button) findViewById(R.id.current_location_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
+        ImageButton findLocationButton = findViewById(R.id.current_location_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
         findLocationButton.setOnClickListener(
                 new Button.OnClickListener(){
                     public void onClick(View v){
@@ -199,8 +200,21 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 }
         );
 
+		Button floor3button = (Button) findViewById(R.id.floor3_button); //Button was created with help of Google Documentation here: https://developer.android.com/reference/android/widget/Button
+		floor3button.setOnClickListener(
+				new Button.OnClickListener(){
+					public void onClick(View v){
+						//Code inside here will execute on main thread after user presses button
+
+						drawMapOverlay(3);
+						Toast toast = Toast.makeText(MapsActivity.this, "Displaying SBS Building Floor 3 indoor map...", Toast.LENGTH_SHORT);
+						toast.show();
+					}
+				}
+		);
+
         NavigationTextViewObject = (TextView) findViewById(R.id.NavigationTextView); //this instantiates a textview object, reference to the Textview UI Element created in the activity_maps.xml file
-        NavigationTextViewObject.setText("This is a test");
+
 
         // ***CITATION*** method below is derived from the following YouTube Tutorial: (Coding with Mitch) https://www.youtube.com/watch?v=f47L1SL5S0o
         if (mGeoApiContext == null) {
@@ -332,6 +346,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 break;
             case R.id.action_findnearestrestroom:
                 Toast.makeText(this, "Showing nearest restrooms", Toast.LENGTH_SHORT).show();
+                getNearestRestrooms();
                 break;
 
             /******************************************************** FOR THE BUILDINGS
@@ -560,10 +575,15 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         if (clickCount != null) {
             clickCount = clickCount + 1;
             marker.setTag(clickCount);
-            Toast.makeText(this,
-                    marker.getTitle() +
-                            " has been clicked " + clickCount + " times.",
-                    Toast.LENGTH_SHORT).show();
+
+            if(((Integer) marker.getTag()).intValue() == 1){ //this will allow user to click on a marker once (to view the name) then click on it a 2nd time to start Navigation
+
+                Toast.makeText(this,
+                        marker.getTitle() +
+                                " has been clicked. Click 2x to get walking directions.",
+                        Toast.LENGTH_SHORT).show();
+
+            }
 
             if(((Integer) marker.getTag()).intValue() == 2){ //this will allow user to click on a marker once (to view the name) then click on it a 2nd time to start Navigation
                 navigateToDestination(marker.getTitle(), marker.getPosition().latitude ,marker.getPosition().longitude);
@@ -572,10 +592,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
             }
         }
 
-            Toast.makeText(this,
-                    marker.getTitle() +
-                            " has been clicked",
-                    Toast.LENGTH_SHORT).show();
+
 
         //Start navigation here
         //When user clicks on a marker, we are passing the marker's longitude + latitude to navigateToDestination() method, which draws the start-to-destination route Polyline on map
@@ -589,9 +606,64 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         return false;
     }
 
-    private void showBuildingList(){
+
+    private void indoorNavigationInstructions(){
+
+        //place markers on staircases
+        // add text instructions to climb to specific floor (perhaps in middle of building)
+        // add text instructions to head to certain direction (south, north) towards classroom
+        //Possibly add an arrow image (left = west, right = east, up = north, down = south) indicating what direction to walk from central staircase.
+
+
+        //** Figure out how to get bearing to destination relative to current location
+
+        // Go to Floor 2, Head west, then turn left at hallway.
+        //Destination will be to your right
+
+
+        //hardcoded classrooms as test
+
+        LatLng SBSE126 = new LatLng(33.8644736, -118.2549322); //E126, Floor 1 (Senior Design Classroom)
+        LatLng SAC2102 = new LatLng(33.8628113, -118.2550489); //SAC2102, Floor 1
+
 
     }
+
+
+    private void getNearestRestrooms(){
+
+        //below is a list of some restrooms across the campus etc. Not a complete list for now, until database is implemented)
+        //These are the LatLng objects (that will be used to plant markers on map)
+
+
+        LatLng SBSBathrooms = new LatLng(33.864750, -118.254987); //bathrooms inside center of SBS (floors 1 + 2)
+        LatLng SAC2Bathrooms = new LatLng(33.8628333, -118.2546607); //bathrooms inside center of South Academic Complex 2
+        LatLng SAC3Bathrooms = new LatLng(33.8624775, -118.2543623); //bathrooms inside center of South Academic Complex 3
+        LatLng LSUSouthBathrooms = new LatLng(33.8647005, -118.2558123); //bathrooms inside South side of LSU (near Bookstore) (Floors 1 + 2)
+        LatLng LSUNorthBathrooms = new LatLng(33.8628333, -118.2546607); //bathrooms inside north side of LSU (near DH Sports Lounge)
+        LatLng NSMBathrooms = new LatLng(33.8638700, -118.2548367); //bathrooms inside center of NSM (Floors 1 + 2)
+        LatLng WelchHallSouthBathrooms = new LatLng(33.8661827, -118.2570317); //bathrooms inside Welch Hall (Floor 1) (near Grab N' Go)
+        LatLng LaCorteHallBathrooms = new LatLng(33.8638297, -118.2570203); //bathrooms inside LCH (Floor 2)
+        LatLng WeightRoomBathrooms = new LatLng(33.8625479, -118.2567568); //bathrooms outside Gym weight room
+
+        NavigationTextViewObject.setText(" "); //way of clearing the textview object of previous navigation instructions
+        mMap.clear(); // clears maps of any markers to prevent user confusion
+        //all markers are being placed on map below, after map was cleared of old markers
+        mMap.addMarker(new MarkerOptions().position(SBSBathrooms).title("SBS Restrooms (Floors 1 + 2)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(SAC2Bathrooms).title("SAC-2 Restrooms")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(SAC3Bathrooms).title("SAC-3 Restrooms")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(LSUNorthBathrooms).title("LSU Restrooms (Near DH Sports Lounge)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(LSUSouthBathrooms).title("LSU Restrooms (Floors 1 + 2)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(NSMBathrooms).title("NSM Bathrooms (Floors 1 + 2))")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(WelchHallSouthBathrooms).title("Welch Hall Restrooms (Near Grab N' Go!; Floor 1)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(LaCorteHallBathrooms).title("LaCorte Hall Restrooms (Floor 2)")).setTag(0);
+        mMap.addMarker(new MarkerOptions().position(WeightRoomBathrooms).title("Weight Room Restrooms (across from Tennis Courts)")).setTag(0);
+
+        mMap.setOnMarkerClickListener(this); //this allows markers to be clickable. In case user wants to select a potential point of interest as a destination
+
+
+    }
+
 
 
 //this method clears all old markers off maps + puts some major food / drink restaurants, stores, vending machines, etc. User can then choose from available
@@ -615,6 +687,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         // ---
 
 
+        NavigationTextViewObject.setText(" "); //way of clearing the textview object of previous navigation instructions
         mMap.clear(); // clears maps of any markers to prevent user confusion
         //all markers are being placed on map below, after map was cleared of old markers
         mMap.addMarker(new MarkerOptions().position(PandaExpress).title("Panda Express")).setTag(0);
@@ -967,7 +1040,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         LatLng csudhSBS = new LatLng(33.8645994, -118.2548179); //this is middle of SBS building; used to place mapOverlay at this exact GPS Coordinates
 
         LatLng southwest = new LatLng(33.8643183, -118.2552353);
-        LatLng northeast = new LatLng(33.8648464, -118.2544142);
+        LatLng northeast = new LatLng(33.8648742, -118.2544119);
         LatLngBounds SBS_Bounds = new LatLngBounds(southwest, northeast); //we are creating LatLngBounds object so our jpg image of the floor plans can overlay right on top of the SBS building.
         BitmapDescriptor floor1 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds); //creating all of the .jpg files to be ready for map overlaying
         BitmapDescriptor floor2 = BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds);
@@ -998,7 +1071,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 // groundOverlayOptions.position(csudhSBS, 100, 100 )
                 //.image( BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.3);
 
-                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.3).visible(true); //this uses LatLngbounds to position the overlay
+                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor1ds)).transparency((float)0.2).visible(true); //this uses LatLngbounds to position the overlay
 
                 imageOverlaySBS1 = mMap.addGroundOverlay(groundOverlayOptions); //this line actually overlays the created groundOverlay onto the map; also stores it as GroundOverlay
 
@@ -1018,7 +1091,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 }
 
                 //in case 1, I have commented out an older working way to position map overlay using only 1 central GPS Coordinate in middle of building
-                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds)).transparency((float)0.3).visible(true); //this uses LatLngbounds to position the overlay (uses 2 GPS coordinates @ corners of buildings for best overlay positioning)
+                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor2ds)).transparency((float)0.2).visible(true); //this uses LatLngbounds to position the overlay (uses 2 GPS coordinates @ corners of buildings for best overlay positioning)
 
 
 
@@ -1042,7 +1115,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
 
                 //in case 1, I have commented out an older working way to position map overlay using only 1 central GPS Coordinate in middle of building
-                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds)).transparency((float)0.3).visible(true); //this uses LatLngbounds to position the overlay (uses 2 GPS coordinates @ corners of buildings for best overlay positioning)
+                groundOverlayOptions.positionFromBounds(SBS_Bounds).image(BitmapDescriptorFactory.fromResource(R.drawable.sbsfloor3ds)).transparency((float)0.2).visible(true); //this uses LatLngbounds to position the overlay (uses 2 GPS coordinates @ corners of buildings for best overlay positioning)
 
 
 
