@@ -7,28 +7,7 @@
         <item android:id="@+id/action_building_directory"
             android:icon="@drawable/ic_list"
             android:title="Building Directory"
-            app:showAsAction="never">
-
-            <menu>
-                    <item android:id="@+id/subitem1"
-                        android:title="College of Education"/>
-
-                    <item android:id="@+id/subitem2"
-                        android:title="Leo Cain Library"/>
-
-                    <item android:id="@+id/subitem3"
-                        android:title="Welsh Hall"/>
-
-                    <item android:id="@+id/subitem4"
-                        android:title="Loker Student Union"/>
-
-                    <item android:id="@+id/subitem5"
-                        android:title="Social and Behavioral Sciences"/>
-
-
-            </menu>
-
-        </item>item>
+            app:showAsAction="never"/>
 
         <item android:id="@+id/action_findnearestfood"
             android:icon="@drawable/ic_findnearestfood"

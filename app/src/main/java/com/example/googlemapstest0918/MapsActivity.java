@@ -31,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.SearchView; //imported this for SearchView widget support; Website for help on searchviews: https://abhiandroid.com/ui/searchview
 import android.widget.TextView;
 import android.widget.Toast;
@@ -117,8 +118,11 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
 
-        Button CollegeOfEducationNav = (Button) findViewById(R.id.subitem1);
+        //Button CollegeOfEducationNav = (Button) findViewById(R.id.subitem1);
         switch (item.getItemId()){
+            case R.id.action_building_directory:
+                Toast.makeText(this, "To Buildings!", Toast.LENGTH_SHORT).show();
+                return true;
             case R.id.action_findnearestfood:
                 Toast.makeText(this, "Food to come", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "onOptionsItemsSelected(): findNearestFood selected.");
@@ -314,35 +318,8 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
 
         switch(menuItem.getItemId()){
-            case R.id.subitem1:
-                Toast.makeText(this, "College Of Education", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
-                navigateToDestination("College of Education", 33.8654089,-118.2548097); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
-                //then set destination to (for now) hard coded coordinates for College of Education
-                break;
-            case R.id.subitem2:
-                Toast.makeText(this, "Leo Cain Library", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
-                navigateToDestination("Leo Cain Library", 33.8640928,-118.2558234); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
-                //then set destination to (for now) hard coded coordinates for Leo Cain Library
-                break;
-            case R.id.subitem3:
-                Toast.makeText(this, "Welch Hall", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
-                navigateToDestination("Welch Hall", 33.8662514,-118.2567457); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
-                //then set destination to (for now) hard coded coordinates for Welch Hall
-                break;
-            case R.id.subitem4:
-                Toast.makeText(this, "Loker Student Union (LSU)", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
-                navigateToDestination("Loker Student Union (LSU)", 33.8647679,-118.2559123); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
-                //then set destination to (for now) hard coded coordinates for LSU
-                break;
-            case R.id.subitem5:
-                Toast.makeText(this, "Social and Behavioral Sciences", Toast.LENGTH_SHORT).show();
-                getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
-                navigateToDestination("Social and Behavioral Sciences", 33.8646270,-118.2548612); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
-                //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+            case R.id.action_building_directory:
+                Toast.makeText(this, "Going to the buildings", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.action_findnearestfood:
                 Toast.makeText(this, "Showing nearest Food spots", Toast.LENGTH_SHORT).show();
@@ -357,7 +334,196 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 Toast.makeText(this, "Showing nearest restrooms", Toast.LENGTH_SHORT).show();
                 break;
 
-
+            /******************************************************** FOR THE BUILDINGS
+             *          case R.id.college_of_education:
+             *                 Toast.makeText(this, "College Of Education", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("College of Education", 33.8654089,-118.2548097);
+             *                 break;
+             *             case R.id.leo_cain:
+             *                 Toast.makeText(this, "Leo Cain Library", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("Leo Cain Library", 33.8640928,-118.2558234); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Leo Cain Library
+             *                 break;
+             *             case R.id.james_welch:
+             *                 Toast.makeText(this, "Welch Hall", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("Welch Hall", 33.8662514,-118.2567457); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Welch Hall
+             *                 break;
+             *             case R.id.loker:
+             *                 Toast.makeText(this, "Loker Student Union (LSU)", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("Loker Student Union (LSU)", 33.8647679,-118.2559123); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for LSU
+             *                 break;
+             *             case R.id.social_behavioral:
+             *                 Toast.makeText(this, "Social and Behavioral Sciences", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("Social and Behavioral Sciences", 33.8646270,-118.2548612); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+             *                 break;
+             *             case R.id.lacorte:
+             *                 Toast.makeText(this, "Lacorte Hall", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("Lacorte Hall", 33.863861, -118.256968); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+             *                 break;
+             *             case R.id.theater:
+             *                 Toast.makeText(this, "University Theater", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("University Theater", 33.865364, .118.256810); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+             *                 break;
+             *             case R.id.social_behavioral:
+             *                 Toast.makeText(this, "Natural Sciences and Mathametics", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("Natural Sciences and Mathematics", 33.863868, .118.254834); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+             *                 break;
+             *             case R.id.gym:
+             *                 Toast.makeText(this, "Gymnasium", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("Gymnasium", 33.862817, -118.255899); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+             *                 break;
+             *             case R.id.complex2:
+             *                 Toast.makeText(this, "South Academy Complex 2", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("South Academy Complex 2", 33.862835, -118.254652 ); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+             *                 break;
+             *             case R.id.complex3:
+             *                 Toast.makeText(this, "South Academy Complex 3", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("South Academy Complex 3", 33.862494, -118.254773); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 //then set destination to (for now) hard coded coordinates for Social and Behavioral Sciences building
+             *                 break;
+             *****************************************************************************/
+            /******************************************************************************* FOR FLOOR 1
+             *             case R.id.a104:
+             *                 Toast.makeText(this, "A104", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("A104", 33.864782, -118.255159); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.a110b:
+             *                 Toast.makeText(this, "A110B", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("A110B", 33.864707, -118.255040); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.a110c:
+             *                 Toast.makeText(this, "A110C", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("A110C", 33.864724, -118254963); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.a122:
+             *                 Toast.makeText(this, "A122", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("A22", 33.864782, -118.254860); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.a126:
+             *                 Toast.makeText(this, "A126", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("A126", 33.864792, -118.254779); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.a134:
+             *                 Toast.makeText(this, "A134", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("A134", 33.864803, -118.254666); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.a144:
+             *                 Toast.makeText(this, "A144", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("A144", 33.864796, -118.254542); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.b101:
+             *                 Toast.makeText(this, "B101", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("B101", 33864714, -118.255.147); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.b110:
+             *                 Toast.makeText(this, "B110", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("B110", 33.864607, -118.255085); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.b131:
+             *                 Toast.makeText(this, "B131", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("B131", 33.864703, -118.254714); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.b137:
+             *                 Toast.makeText(this, "B137", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("B137", 33.864707, -118.254644); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.b140:
+             *                 Toast.makeText(this, "B140", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("B140", 33.864633, -118.254613); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.b143:
+             *                 Toast.makeText(this, "B143", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("B143", 33.864719, -118.254537); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.d121:
+             *                 Toast.makeText(this, "D121", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("D121", 33.864506, -118.255083); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.d125:
+             *                 Toast.makeText(this, "D125", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("D125", 33.864441, -118.255083); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.e116:
+             *                 Toast.makeText(this, "E116", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("E166", 33.864602, -118.254945); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.e122:
+             *                 Toast.makeText(this, "E122", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("E122", 33.864518, -118.254956); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.e126:
+             *                 Toast.makeText(this, "E126", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("E126", 33.864441, -118.254959); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.f101:
+             *                 Toast.makeText(this, "F101", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("F101", 33.864787, -118.254697); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.f117:
+             *                 Toast.makeText(this, "F117", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("F117", 33.864616, -118.254694); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.f121:
+             *                 Toast.makeText(this, "F121", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("F121", 33.864528, -118.254691); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.f125:
+             *                 Toast.makeText(this, "F125", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("F125", 33.864443, -118.254694); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.g122:
+             *                 Toast.makeText(this, "G122", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("G122", 33.864525, -118.254542); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             *             case R.id.g126:
+             *                 Toast.makeText(this, "G126", Toast.LENGTH_SHORT).show();
+             *                 getDeviceLocation(15); // first find device location (if GPS is available), set appropriate boolean flag for isUserLocatable
+             *                 navigateToDestination("G126", 33.864443, -118.254548); // we are passing a the name of the desired destination, longitude and latitude coordinates. This method initiates navigation
+             *                 break;
+             ******************************
+             */
         }
         return true;
     }
@@ -423,7 +589,9 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         return false;
     }
 
+    private void showBuildingList(){
 
+    }
 
 
 //this method clears all old markers off maps + puts some major food / drink restaurants, stores, vending machines, etc. User can then choose from available
