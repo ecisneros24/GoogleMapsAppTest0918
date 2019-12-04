@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/college_of_education"
+        android:text="College of Education"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/leo_cain"
+        android:text="Leo Cain Library"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/james_welch"
+        android:text="James Welch Hall"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/loker"
+        android:text="Loker Student Union"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/social_behavioral"
+        android:text="Social and Behavioral Sciences"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/lacorte"
+        android:text="Lacorte Hall"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/theater"
+        android:text="University Theater"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/natural_sciences_and_math"
+        android:text="Natural Sciences and Mathamatics"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/gym"
+        android:text="Gymnasium"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/complex2"
+        android:text="South Academy Complex 2"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/complex3"
+        android:text="South Academy Complex 3"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/tennis"
+        android:text="Tennis Courts"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="45sp"
+        android:id = "@+id/health"
+        android:text="Student Health"/>
+</LinearLayout>
